@@ -7,8 +7,10 @@ A clean, modular, and performant multi-host NixOS configuration built with [flak
 ## ✨ Features
 
 - 🏠 **Headless Homelab:** Clean, strictly headless server environment with zero GUI/desktop baggage.
+- 💾 **Declarative Disko Partitioning:** Fully automated, reproducible GPT partitioning with ESP (`/boot`), swap, and Btrfs subvolumes (`@`, `@home`, `@nix`, `@persist`, `@log`).
 - 💻 **Laptop Server Ready:** Automated lid-switch ignore (`HandleLidSwitch = "ignore"`) and sleep/suspend suppression for uninterrupted operation on laptops.
 - 📦 **Homelab Services Stack:** Declarative native services for **Immich** (photos), **Glance** (dashboard), **Vaultwarden** (Bitwarden password manager), **Obsidian LiveSync** (CouchDB), and **Samba NAS** (with Windows WSDD and Apple Avahi mDNS discovery).
+- 🐚 **Shell-Repo Service Runner:** Run custom background shells (like the **Photo Gallery** "Life Museum" daily camera capture daemon) at the systemd service level with isolated runtime dependencies.
 - 🌐 **Automated Tailscale & Tailscale SSH:** Direct peer-to-peer Wi-Fi connectivity and zero-password SSH access for devices authenticated to your Tailscale account.
 - 🛠️ **Terminal & Developer Experience:** Gorgeous OLED monochrome Neovim (`nvf`), Zsh vi-mode with FZF integration, modern CLI replacements (`eza`, `bat`, `duf`, `ripgrep`, `zoxide`), and Docker.
 - 🧹 **100% XDG Compliant:** Clean `$HOME` with all histories and tool states routed to standard XDG directories.
@@ -25,8 +27,17 @@ A clean, modular, and performant multi-host NixOS configuration built with [flak
 ## 🚀 Quick Commands
 
 ```bash
+# Automated wipe and install on target machine
+sudo ./install.sh --disk /dev/nvme0n1 --host homelab
+
+# Remote installation over SSH to Ubuntu (nixos-anywhere)
+./install.sh --mode remote --host homelab --target root@<homelab-ip>
+
 # Validate and evaluate configuration
-nix eval .#nixosConfigurations.powerhouse.config.system.build.toplevel.drvPath
+nix eval .#nixosConfigurations.homelab.config.system.build.toplevel.drvPath
+
+# Dry build configuration
+nix build .#nixosConfigurations.homelab.config.system.build.toplevel --dry-run
 
 # Rebuild system using Nix Helper (nh)
 nh os switch
