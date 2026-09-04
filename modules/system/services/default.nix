@@ -7,6 +7,7 @@
       services-vaultwarden
       services-obsidian-sync
       services-nas
+      services-shell-repo
     ];
   };
 }

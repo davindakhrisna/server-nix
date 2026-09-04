@@ -40,6 +40,7 @@
             "wheel"
             "networkmanager"
             "docker"
+            "video"
           ];
           openssh.authorizedKeys.keys = [
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJH9jDDmY066+eqWJq6HZtJuhysL3CAL29HsSM1rtSou kris@windows"
@@ -58,6 +59,16 @@
             enable = true;
             adminUser = "admin";
             adminPassword = "admin"; # Change this from default!
+          };
+
+          shellRepo = {
+            enable = true;
+            photoGallery = {
+              enable = true;
+              cameraType = "usb";
+              cameraDevice = "/dev/video0";
+              environmentFile = "/persist/secrets/photo-gallery.env";
+            };
           };
         };
 
