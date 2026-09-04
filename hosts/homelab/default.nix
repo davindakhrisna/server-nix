@@ -7,6 +7,8 @@
     system = "x86_64-linux";
     specialArgs = {inherit inputs self;};
     modules = [
+      inputs.disko.nixosModules.disko
+      ./_disko.nix
       ./_hardware.nix
       inputs.home-manager.nixosModules.home-manager
       {
@@ -40,8 +42,7 @@
             "docker"
           ];
           openssh.authorizedKeys.keys = [
-            # PASTE YOUR MAIN LAPTOP'S SSH PUBLIC KEY HERE:
-            # Example: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... user@laptop"
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJH9jDDmY066+eqWJq6HZtJuhysL3CAL29HsSM1rtSou kris@windows"
           ];
         };
 

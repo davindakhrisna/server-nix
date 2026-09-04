@@ -19,6 +19,8 @@
           ];
         };
       }
+      inputs.disko.nixosModules.disko
+      ./_disko.nix
       ./_hardware.nix
 
       # System modules (base, hardware, utils, homelab services)
