@@ -1,4 +1,4 @@
-# ❄️ Flint - Multi-host NixOS Configuration
+# ❄️ Flint Server - Multi-host NixOS Configuration
 
 A clean, modular, and performant multi-host NixOS configuration built with [flake-parts](https://github.com/hercules-ci/flake-parts) and [import-tree](https://github.com/denful/import-tree).
 
