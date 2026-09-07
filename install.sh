@@ -111,6 +111,42 @@ if [[ "$MODE" == "remote" ]]; then
     echo -e "${YELLOW}Mode:${NC} Remote install via nixos-anywhere"
     echo -e "${YELLOW}Target:${NC} $REMOTE_TARGET"
     echo -e "${YELLOW}Host Configuration:${NC} $HOST_NAME"
+
+    # Auto-detect remote disk if not provided
+    DISKO_FILE="hosts/$HOST_NAME/_disko.nix"
+    if [[ -z "$TARGET_DISK" ]]; then
+        REMOTE_DETECTED_DISK=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_TARGET" \
+            "lsblk -dpno NAME,TYPE 2>/dev/null | awk '\$2==\"disk\" {print \$1; exit}'" 2>/dev/null || true)
+        if [[ -n "$REMOTE_DETECTED_DISK" ]]; then
+            TARGET_DISK="$REMOTE_DETECTED_DISK"
+            echo -e "  ${GREEN}==>${NC} Auto-detected remote primary disk: ${BOLD}$TARGET_DISK${NC}"
+        fi
+    fi
+
+    # Update disk device in hosts/$HOST_NAME/_disko.nix
+    if [[ -n "$TARGET_DISK" && -f "$DISKO_FILE" ]]; then
+        echo -e "${YELLOW}Target Disk:${NC} $TARGET_DISK"
+        echo -e "  ${GREEN}==>${NC} Updating target disk in $DISKO_FILE to ${BOLD}$TARGET_DISK${NC}..."
+        sed -i "s|device = lib.mkDefault \".*\";|device = lib.mkDefault \"$TARGET_DISK\";|" "$DISKO_FILE"
+        git add "$DISKO_FILE" 2>/dev/null || true
+    fi
+
+    # Detect remote CPU architecture (Intel vs AMD)
+    HOST_DEFAULT="hosts/$HOST_NAME/default.nix"
+    if [[ -f "$HOST_DEFAULT" ]]; then
+        REMOTE_CPU_INFO=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_TARGET" "cat /proc/cpuinfo 2>/dev/null" || true)
+        if [[ -n "$REMOTE_CPU_INFO" ]]; then
+            DETECTED_CPU="intel"
+            if echo "$REMOTE_CPU_INFO" | grep -q "AuthenticAMD"; then
+                DETECTED_CPU="amd"
+            elif echo "$REMOTE_CPU_INFO" | grep -q "GenuineIntel"; then
+                DETECTED_CPU="intel"
+            fi
+            echo -e "  ${GREEN}==>${NC} Detected remote CPU architecture: ${BOLD}${DETECTED_CPU}${NC}"
+            sed -i "s|cpu = \".*\";|cpu = \"$DETECTED_CPU\";|" "$HOST_DEFAULT"
+            git add "$HOST_DEFAULT" 2>/dev/null || true
+        fi
+    fi
     echo ""
 
     if [[ "$SKIP_CONFIRM" != true ]]; then
