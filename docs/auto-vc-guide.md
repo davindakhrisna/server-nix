@@ -124,5 +124,5 @@ For 24/7 pushing to succeed, ensure your deploy key has **write access**:
    - **Check: `[x] Allow write access`**.
 3. Set your git remote to SSH:
    ```bash
-   git remote set-url origin git@github.com:davindakhrisna/server-nix.git
+   git remote set-url origin git@github.com:davindakhrisna/server-nixos.git
    ```

@@ -52,7 +52,7 @@ Use this method when booting the target server from a standard NixOS Minimal ISO
 
 ### Step 3: Clone Configuration
 ```bash
-git clone https://github.com/davindakhrisna/server-nix.git /tmp/flint
+git clone https://github.com/davindakhrisna/server-nixos.git /tmp/flint
 cd /tmp/flint
 ```
 

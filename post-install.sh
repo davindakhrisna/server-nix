@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 
 SSH_DIR="$HOME/.ssh"
 KEY_FILE="$SSH_DIR/id_github_deploy"
-REPO_DEFAULT="davindakhrisna/server-nix"
+REPO_DEFAULT="davindakhrisna/server-nixos"
 
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "${BLUE}${BOLD}   ❄️  Flint Server: Post-Installation Setup Helper  ${NC}"
