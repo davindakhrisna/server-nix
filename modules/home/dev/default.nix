@@ -27,6 +27,19 @@
         gitCredentialHelper.enable = true;
       };
 
+      ssh = {
+        enable = true;
+        enableDefaultConfig = false;
+        settings = {
+          "github.com" = {
+            hostname = "github.com";
+            user = "git";
+            identityFile = "${config.home.homeDirectory}/.ssh/id_github_deploy";
+            identitiesOnly = true;
+          };
+        };
+      };
+
       direnv = {
         enable = true;
         nix-direnv.enable = true;

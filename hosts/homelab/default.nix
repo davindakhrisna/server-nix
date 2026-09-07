@@ -69,7 +69,22 @@
               cameraDevice = "/dev/video0";
               environmentFile = "/persist/secrets/photo-gallery.env";
             };
+            autoVc = {
+              enable = true;
+              repoPath = "/home/kryisnn/.config/flint";
+              intervalSeconds = 60;
+            };
+            waneWatcher = {
+              enable = true;
+              logFile = "/home/kryisnn/.config/flint/wane-log";
+            };
           };
+
+          # AI & Automation Services Suite
+          n8n.enable = true;
+          openhands.enable = true;
+          nineRouter.enable = true;
+          headroom.enable = true;
         };
 
         # Hardware & Flake Path

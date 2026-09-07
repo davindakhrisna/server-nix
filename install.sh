@@ -195,12 +195,76 @@ nix --extra-experimental-features "nix-command flakes" run github:nix-community/
 
 echo -e "\n${GREEN}✓ Partitions formatted and mounted to /mnt successfully.${NC}"
 
+# 1.5 Memory Protection (Prevent OOM on systems with <= 4GB RAM)
+echo -e "\n${GREEN}==>${NC} Configuring memory protection for low-RAM safety..."
+
+# Activate the 8GB swap partition created on the target disk by Disko
+SWAP_ACTIVATED=false
+for part in $(lsblk -ln -o NAME,FSTYPE "$TARGET_DISK" 2>/dev/null | awk '$2=="swap" {print "/dev/"$1}'); do
+    if swapon "$part" 2>/dev/null; then
+        echo -e "  ${GREEN}✓ Activated swap on ${BOLD}${part}${NC} (prevents Out-Of-Memory)"
+        SWAP_ACTIVATED=true
+        break
+    fi
+done
+
+# If swap partition was not automatically detected, create an emergency swapfile on /mnt
+if [[ "$SWAP_ACTIVATED" != true ]]; then
+    echo -e "  ${YELLOW}Creating 4GB emergency swapfile on target disk (/mnt/swapfile)...${NC}"
+    dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096 status=none 2>/dev/null || true
+    chmod 600 /mnt/swapfile 2>/dev/null || true
+    mkswap /mnt/swapfile >/dev/null 2>&1 || true
+    swapon /mnt/swapfile 2>/dev/null || true
+fi
+
+# Relocate build TMPDIR to target NVMe/SSD instead of RAM-backed tmpfs
+mkdir -p /mnt/tmp
+chmod 1777 /mnt/tmp
+export TMPDIR=/mnt/tmp
+echo -e "  ${GREEN}✓ Relocated build TMPDIR to NVMe storage (/mnt/tmp)${NC} (saves RAM)"
+
+# Detect available RAM and constrain parallel jobs if <= 6GB
+MEM_TOTAL_KB=$(grep -i MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo 8000000)
+MEM_TOTAL_GB=$(( MEM_TOTAL_KB / 1024 / 1024 ))
+EXTRA_INSTALL_ARGS=()
+if [ "$MEM_TOTAL_GB" -le 6 ]; then
+    echo -e "  ${YELLOW}Detected low physical RAM (${MEM_TOTAL_GB}GB). Limiting parallel build jobs...${NC}"
+    EXTRA_INSTALL_ARGS+=(--option max-jobs 2 --option cores 2)
+fi
+
 # 2. Run NixOS Install
 echo -e "\n${GREEN}${BOLD}[2/3] Installing NixOS system closure to /mnt...${NC}"
-nixos-install --flake ".#$HOST_NAME" --no-channel-copy
+nixos-install --flake ".#$HOST_NAME" --no-channel-copy "${EXTRA_INSTALL_ARGS[@]}"
+
+# 2.5 Post-Install System Configuration
+echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository..."
+
+# Copy configuration repository to /home/kryisnn/.config/flint
+mkdir -p /mnt/home/kryisnn/.config/flint
+cp -r . /mnt/home/kryisnn/.config/flint/
+chown -R 1000:100 /mnt/home/kryisnn/.config/flint
+echo -e "  ${GREEN}✓ Configuration copied to /home/kryisnn/.config/flint${NC}"
+
+# Prompt to set password for primary user kryisnn (sudo access)
+echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}kryisnn${NC}:"
+nixos-enter --root /mnt -c "passwd kryisnn" || true
+
+# Cleanup temporary installation swap & files
+swapoff -a 2>/dev/null || true
+[ -f /mnt/swapfile ] && rm -f /mnt/swapfile
+rm -rf /mnt/tmp
 
 # 3. Post-install
 echo -e "\n${GREEN}${BOLD}[3/3] Installation complete!${NC}"
+echo ""
+echo -e "${BLUE}${BOLD}====================================================${NC}"
+echo -e "${GREEN}${BOLD}   ✓ Flint NixOS Successfully Installed!            ${NC}"
+echo -e "${BLUE}${BOLD}====================================================${NC}"
+echo -e "Next steps on first boot:"
+echo -e "  1. Log in as ${BOLD}kryisnn${NC}"
+echo -e "  2. Run: ${CYAN}cd ~/.config/flint && ./post-install.sh${NC}"
+echo -e "     (Sets up your 24/7 GitHub Deploy Key and Tailscale)"
+echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo ""
 read -rp "Would you like to unmount /mnt and reboot now? [y/N]: " REBOOT_CHOICE
 if [[ "$REBOOT_CHOICE" =~ ^[Yy]$ ]]; then

@@ -8,6 +8,10 @@
       services-obsidian-sync
       services-nas
       services-shell-repo
+      services-n8n
+      services-openhands
+      services-nine-router
+      services-headroom
     ];
   };
 }

@@ -11,7 +11,7 @@
 
       port = lib.mkOption {
         type = lib.types.port;
-        default = 5678;
+        default = 8080;
         description = "Port on which Glance dashboard runs";
       };
     };
@@ -57,6 +57,27 @@
                             {
                               title = "Obsidian CouchDB";
                               url = "http://localhost:5984/_utils";
+                            }
+                          ];
+                        }
+                        {
+                          title = "AI & Automation";
+                          links = [
+                            {
+                              title = "n8n Workflows";
+                              url = "http://localhost:5678";
+                            }
+                            {
+                              title = "OpenHands";
+                              url = "http://localhost:3000";
+                            }
+                            {
+                              title = "9Router";
+                              url = "http://localhost:20128";
+                            }
+                            {
+                              title = "Headroom";
+                              url = "http://localhost:8787";
                             }
                           ];
                         }

@@ -1,4 +1,4 @@
-# ❄️ Flint Server - Multi-host NixOS Configuration
+# ❄️ Flint Server - Modular Server Configuration
 
 A clean, modular, and performant multi-host NixOS configuration built with [flake-parts](https://github.com/hercules-ci/flake-parts) and [import-tree](https://github.com/denful/import-tree).
 
@@ -17,13 +17,6 @@ A clean, modular, and performant multi-host NixOS configuration built with [flak
 
 ---
 
-## 📚 Documentation
-
-- [📦 Offline Installation Guide](docs/offline-installation.md)
-- [🏛️ Architecture & Module Structure](docs/architecture.md)
-
----
-
 ## 🚀 Quick Commands
 
 ```bash
@@ -32,6 +25,9 @@ sudo ./install.sh --disk /dev/nvme0n1 --host homelab
 
 # Remote installation over SSH to Ubuntu (nixos-anywhere)
 ./install.sh --mode remote --host homelab --target root@<homelab-ip>
+
+# Guided post-installation helper (GitHub 24/7 deploy key, Tailscale)
+./post-install.sh
 
 # Validate and evaluate configuration
 nix eval .#nixosConfigurations.homelab.config.system.build.toplevel.drvPath

@@ -10,6 +10,14 @@
     photoGalleryScript = pkgs.writeShellScriptBin "photo-gallery" (
       builtins.readFile ../../../shell-repo/photo-gallery/photo-gallery.sh
     );
+
+    autoVcScript = pkgs.writeShellScriptBin "auto-vc" (
+      builtins.readFile ../../../shell-repo/auto-vc/auto-vc.sh
+    );
+
+    waneScript = pkgs.writeShellScriptBin "wane" (
+      builtins.readFile ../../../shell-repo/wane-watcher/wane.sh
+    );
   in {
     options.homelab.shellRepo = {
       enable = lib.mkEnableOption "Shell-Repo service runner for custom background scripts";
@@ -96,6 +104,86 @@
         };
       };
 
+      autoVc = {
+        enable = lib.mkEnableOption "Auto-VC automated Git add, commit, and push 24/7 daemon";
+
+        user = lib.mkOption {
+          type = lib.types.str;
+          default = "kryisnn";
+          description = "User to run the auto-vc daemon as";
+        };
+
+        repoPath = lib.mkOption {
+          type = lib.types.str;
+          default = config.var.flakePath;
+          description = "Path to the git repository to track and sync";
+        };
+
+        branch = lib.mkOption {
+          type = lib.types.str;
+          default = "main";
+          description = "Target Git branch to push changes to";
+        };
+
+        remote = lib.mkOption {
+          type = lib.types.str;
+          default = "origin";
+          description = "Git remote name";
+        };
+
+        intervalSeconds = lib.mkOption {
+          type = lib.types.int;
+          default = 60;
+          description = "Interval in seconds between git checks";
+        };
+
+        sshKeyPath = lib.mkOption {
+          type = lib.types.nullOr (lib.types.either lib.types.path lib.types.str);
+          default = "/home/kryisnn/.ssh/id_github_deploy";
+          description = "Path to SSH private key used for git push";
+        };
+
+        commitPrefix = lib.mkOption {
+          type = lib.types.str;
+          default = "chore(auto-vc)";
+          description = "Prefix for automated commit messages";
+        };
+
+        pullBeforePush = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Pull remote changes with rebase before pushing";
+        };
+
+        environmentFile = lib.mkOption {
+          type = lib.types.nullOr (lib.types.either lib.types.path lib.types.str);
+          default = null;
+          description = "Path to environment file for extra secrets or environment variables";
+        };
+      };
+
+      waneWatcher = {
+        enable = lib.mkEnableOption "WANE (Warnings And Errors) 24/7 system journal watcher and log inspector";
+
+        logFile = lib.mkOption {
+          type = lib.types.str;
+          default = "/var/log/wane/wane-log";
+          description = "Path to central wane-log file";
+        };
+
+        maxLogSizeMB = lib.mkOption {
+          type = lib.types.int;
+          default = 50;
+          description = "Maximum size in megabytes before log rotates/truncates";
+        };
+
+        user = lib.mkOption {
+          type = lib.types.str;
+          default = "root";
+          description = "User to run wane-watcher collector under";
+        };
+      };
+
       customServices = lib.mkOption {
         type = lib.types.attrsOf (
           lib.types.submodule {
@@ -151,6 +239,15 @@
     };
 
     config = lib.mkIf cfg.enable {
+      environment.systemPackages = lib.mkIf cfg.waneWatcher.enable [
+        waneScript
+      ];
+
+      systemd.tmpfiles.rules = lib.mkIf cfg.waneWatcher.enable [
+        "d /var/log/wane 0775 root users -"
+        "f /var/log/wane/wane-log 0664 root users -"
+      ];
+
       systemd.services = lib.mkMerge [
         # Photo Gallery Service
         (lib.mkIf cfg.photoGallery.enable {
@@ -204,6 +301,92 @@
               // lib.optionalAttrs (cfg.photoGallery.environmentFile != null) {
                 EnvironmentFile = cfg.photoGallery.environmentFile;
               };
+          };
+        })
+
+        # Auto-VC Service
+        (lib.mkIf cfg.autoVc.enable {
+          auto-vc = {
+            description = "Auto-VC - 24/7 Automated Git Add, Commit & Push Daemon";
+            wantedBy = ["multi-user.target"];
+            after = ["network-online.target"];
+            wants = ["network-online.target"];
+
+            path = with pkgs; [
+              bash
+              coreutils
+              git
+              openssh
+              gnugrep
+              gnused
+              gawk
+            ];
+
+            environment =
+              {
+                REPO_PATH = cfg.autoVc.repoPath;
+                GIT_BRANCH = cfg.autoVc.branch;
+                GIT_REMOTE = cfg.autoVc.remote;
+                CHECK_INTERVAL = toString cfg.autoVc.intervalSeconds;
+                COMMIT_PREFIX = cfg.autoVc.commitPrefix;
+                PULL_BEFORE_PUSH =
+                  if cfg.autoVc.pullBeforePush
+                  then "true"
+                  else "false";
+                HOME = "/home/${cfg.autoVc.user}";
+              }
+              // lib.optionalAttrs (cfg.autoVc.sshKeyPath != null) {
+                GIT_SSH_COMMAND = "ssh -i ${toString cfg.autoVc.sshKeyPath} -o StrictHostKeyChecking=accept-new -o BatchMode=yes";
+              };
+
+            serviceConfig =
+              {
+                Type = "simple";
+                User = cfg.autoVc.user;
+                Group = "users";
+                WorkingDirectory = cfg.autoVc.repoPath;
+                ExecStart = "${autoVcScript}/bin/auto-vc --daemon";
+                Restart = "always";
+                RestartSec = "15s";
+                NoNewPrivileges = true;
+              }
+              // lib.optionalAttrs (cfg.autoVc.environmentFile != null) {
+                EnvironmentFile = cfg.autoVc.environmentFile;
+              };
+          };
+        })
+
+        # WANE Watcher Service
+        (lib.mkIf cfg.waneWatcher.enable {
+          wane-watcher = {
+            description = "WANE - 24/7 System Warning & Error Watcher Daemon";
+            wantedBy = ["multi-user.target"];
+            after = ["systemd-journald.service"];
+            wants = ["systemd-journald.service"];
+
+            path = with pkgs; [
+              bash
+              coreutils
+              systemd
+              jq
+              gnugrep
+              gawk
+              util-linux
+            ];
+
+            environment = {
+              WANE_LOG_FILE = cfg.waneWatcher.logFile;
+              WANE_MAX_SIZE_MB = toString cfg.waneWatcher.maxLogSizeMB;
+            };
+
+            serviceConfig = {
+              Type = "simple";
+              User = cfg.waneWatcher.user;
+              Group = "users";
+              ExecStart = "${waneScript}/bin/wane --daemon";
+              Restart = "always";
+              RestartSec = "10s";
+            };
           };
         })
 
