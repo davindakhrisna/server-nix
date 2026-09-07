@@ -211,6 +211,20 @@ if [[ -f "$DISKO_FILE" ]]; then
     git add "$DISKO_FILE" 2>/dev/null || true
 fi
 
+# Detect and configure target CPU architecture (Intel vs AMD)
+HOST_DEFAULT="hosts/$HOST_NAME/default.nix"
+if [[ -f "$HOST_DEFAULT" ]]; then
+    DETECTED_CPU="intel"
+    if grep -q "AuthenticAMD" /proc/cpuinfo 2>/dev/null; then
+        DETECTED_CPU="amd"
+    elif grep -q "GenuineIntel" /proc/cpuinfo 2>/dev/null; then
+        DETECTED_CPU="intel"
+    fi
+    echo -e "  ${GREEN}==>${NC} Detected target CPU architecture: ${BOLD}${DETECTED_CPU}${NC}"
+    sed -i "s|cpu = \".*\";|cpu = \"$DETECTED_CPU\";|" "$HOST_DEFAULT"
+    git add "$HOST_DEFAULT" 2>/dev/null || true
+fi
+
 # Safety Confirmation
 echo ""
 echo -e "${RED}${BOLD}====================================================${NC}"

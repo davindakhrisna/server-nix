@@ -44,11 +44,13 @@
       (lib.mkIf (cfg.cpu == "intel") {
         hardware.cpu.intel.updateMicrocode = true;
         services.thermald.enable = true;
+        boot.kernelModules = ["kvm-intel"];
       })
 
       # CPU: AMD
       (lib.mkIf (cfg.cpu == "amd") {
         hardware.cpu.amd.updateMicrocode = true;
+        boot.kernelModules = ["kvm-amd"];
       })
 
       # GPU: Nvidia

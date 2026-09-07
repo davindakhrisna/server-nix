@@ -9,10 +9,24 @@
 
   boot = {
     initrd = {
-      availableKernelModules = ["xhci_pci" "vmd" "ahci" "nvme" "uas" "usbhid" "sd_mod"];
+      availableKernelModules = [
+        "xhci_pci"
+        "ehci_pci"
+        "ahci"
+        "nvme"
+        "usb_storage"
+        "uas"
+        "sd_mod"
+        "sdhci_pci"
+        "vmd"
+        "virtio_pci"
+        "virtio_scsi"
+        "virtio_blk"
+        "usbhid"
+      ];
       kernelModules = [];
     };
-    kernelModules = ["kvm-intel"];
+    kernelModules = [];
     extraModulePackages = [];
   };
 
