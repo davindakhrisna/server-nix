@@ -231,11 +231,18 @@ if [[ "$SKIP_CONFIRM" != true ]]; then
     fi
 fi
 
-# 1. Run Disko (Partition, Format, Mount)
+# Ensure any active swap or mounts on target disk are released before partitioning
+for part in $(lsblk -ln -o NAME "$TARGET_DISK" 2>/dev/null | awk '{print "/dev/"$1}'); do
+    swapoff "$part" 2>/dev/null || true
+    umount -l "$part" 2>/dev/null || true
+done
+
+# 1. Run Disko (Partition, Format, Mount using standalone disko config to prevent OOM)
 echo -e "\n${GREEN}${BOLD}[1/3] Partitioning & Formatting disk with Disko...${NC}"
-nix --extra-experimental-features "nix-command flakes" run github:nix-community/disko -- \
-    --mode disko \
-    --flake ".#$HOST_NAME"
+nix --extra-experimental-features "nix-command flakes" run nixpkgs#disko -- \
+    --mode destroy,format,mount \
+    --yes-wipe-all-disks \
+    "$DISKO_FILE"
 
 echo -e "\n${GREEN}✓ Partitions formatted and mounted to /mnt successfully.${NC}"
 
