@@ -71,12 +71,12 @@
             };
             autoVc = {
               enable = true;
-              repoPath = "/home/kryisnn/.config/flint";
+              repoPath = "/home/kryisnn/.config/config";
               intervalSeconds = 60;
             };
             waneWatcher = {
               enable = true;
-              logFile = "/home/kryisnn/.config/flint/wane-log";
+              logFile = "/home/kryisnn/.config/config/wane-log";
             };
           };
 
@@ -89,7 +89,7 @@
 
         # Hardware & Flake Path
         var = {
-          flakePath = "/home/kryisnn/.config/flint"; # Path to your flint flake repository
+          flakePath = "/home/kryisnn/.config/config"; # Path to your flake repository
           cpu = "intel";
           gpu = null; # Set to "nvidia", "amd", or "intel" if laptop has dedicated GPU
           dualBoot.enable = false;

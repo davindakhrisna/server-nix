@@ -1,4 +1,4 @@
-# ❄️ Flint Server - Modular NixOS Homelab
+# ❄️ NixOS Server - Modular Homelab
 
 [![NixOS](https://img.shields.io/badge/NixOS-26.05-blue.svg?logo=nixos&logoColor=white)](https://nixos.org)
 [![Flake-Parts](https://img.shields.io/badge/Architecture-Flake--Parts-orange.svg)](https://github.com/hercules-ci/flake-parts)
@@ -13,7 +13,7 @@ A clean, declarative, and robust multi-host NixOS server configuration built wit
 
 ```mermaid
 graph TD
-    subgraph Flint NixOS Flake
+    subgraph NixOS Server Flake
         FP[flake-parts / import-tree] --> NM[System Modules]
         FP --> HM[Home Manager Modules]
         FP --> Hosts[Host Configurations]

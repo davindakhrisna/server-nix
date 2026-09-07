@@ -1,6 +1,6 @@
 # 🛠️ Services Matrix & Architecture Guide
 
-Flint NixOS deploys a curated, unified homelab suite across AI workflows, automation, self-hosted cloud, and system intelligence.
+This NixOS server deploys a curated, unified homelab suite across AI workflows, automation, self-hosted cloud, and system intelligence.
 
 ---
 
@@ -17,8 +17,8 @@ Flint NixOS deploys a curated, unified homelab suite across AI workflows, automa
 | **Vaultwarden** | `8222` | Native NixOS | `http://<server-ip>:8222` | `/var/lib/bitwarden_rs` | `/persist/secrets/vaultwarden.env` |
 | **Obsidian LiveSync** | `5984` | Native CouchDB | `http://<server-ip>:5984` | `/var/lib/couchdb` | In flake / CouchDB local.ini |
 | **Samba NAS** | `139, 445`| Native Samba | `smb://<server-ip>/` | `/persist/storage` | User samba credentials |
-| **Auto-VC** | N/A | Systemd Daemon | Git CLI (`origin main`) | `/home/kryisnn/.config/flint` | `~/.ssh/id_github_deploy` |
-| **WANE Watcher** | N/A | Systemd Daemon | Terminal (`wane`) | `/home/kryisnn/.config/flint/wane-log` | N/A |
+| **Auto-VC** | N/A | Systemd Daemon | Git CLI (`origin main`) | `/home/kryisnn/.config/config` | `~/.ssh/id_github_deploy` |
+| **WANE Watcher** | N/A | Systemd Daemon | Terminal (`wane`) | `/home/kryisnn/.config/config/wane-log` | N/A |
 | **Photo Gallery** | N/A | Systemd Daemon | Syncs to Immich | `/var/lib/photo-gallery` | `/persist/secrets/photo-gallery.env` |
 
 ---
@@ -106,7 +106,7 @@ Flint NixOS deploys a curated, unified homelab suite across AI workflows, automa
 
 ## 🔒 Secrets Management Pattern
 
-Sensitive API keys, database passwords, and auth tokens should **never** be committed to Git. Flint uses systemd `EnvironmentFile` paths residing on persistent storage:
+Sensitive API keys, database passwords, and auth tokens should **never** be committed to Git. This configuration uses systemd `EnvironmentFile` paths residing on persistent storage:
 
 ```text
 /persist/secrets/

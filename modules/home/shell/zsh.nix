@@ -99,8 +99,8 @@
         not = "nh os test";
         nob = "nh os boot";
         nclean = "nh clean all";
-        ncheck = "nix flake check \${FLINT_DIR:-\$HOME/.config/flint} --no-build";
-        nup = "nix flake update --flake \${FLINT_DIR:-\$HOME/.config/flint}";
+        ncheck = "nix flake check \${CONFIG_DIR:-\$HOME/.config/config} --no-build";
+        nup = "nix flake update --flake \${CONFIG_DIR:-\$HOME/.config/config}";
 
         # Original binaries
         ocat = "/run/current-system/sw/bin/cat";

@@ -1,5 +1,5 @@
 {
-  description = "Flint - Multi-host NixOS Configuration (Dendritic)";
+  description = "Modular NixOS Server Configuration (Dendritic)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";

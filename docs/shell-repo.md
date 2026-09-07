@@ -1,6 +1,6 @@
 # 🐚 Shell-Repo Service Runner Guide
 
-`shell-repo` is an architectural pattern in Flint NixOS designed for managing custom automation daemons and background scripts at the systemd service level with isolated runtime dependencies—without requiring heavy OCI containerization or formal `nixpkgs` packaging.
+`shell-repo` is an architectural pattern in this NixOS server configuration designed for managing custom automation daemons and background scripts at the systemd service level with isolated runtime dependencies—without requiring heavy OCI containerization or formal `nixpkgs` packaging.
 
 ---
 
@@ -76,7 +76,7 @@ homelab.shellRepo = {
   customServices = {
     my-backup = {
       enable = true;
-      script = "/home/kryisnn/.config/flint/shell-repo/my-script.sh";
+      script = "/home/kryisnn/.config/config/shell-repo/my-script.sh";
       user = "kryisnn";
       environmentFile = "/persist/secrets/my-script.env";
       packages = with pkgs; [ rsync curl jq bash ];

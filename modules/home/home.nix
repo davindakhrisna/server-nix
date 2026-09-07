@@ -4,7 +4,7 @@
     osConfig ? {},
     ...
   }: let
-    flakePath = osConfig.var.flakePath or "${config.home.homeDirectory}/.config/flint";
+    flakePath = osConfig.var.flakePath or "${config.home.homeDirectory}/.config/config";
   in {
     xdg.enable = true;
 
@@ -13,7 +13,7 @@
 
       sessionVariables = {
         EDITOR = "nvim";
-        FLINT_DIR = flakePath;
+        CONFIG_DIR = flakePath;
         NH_FLAKE = flakePath;
 
         # Shell & tool history / configs

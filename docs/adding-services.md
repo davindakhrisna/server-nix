@@ -1,4 +1,4 @@
-# 📦 Adding New Services to Flint NixOS
+# 📦 Adding New Services to NixOS Server
 
 This guide explains how to add new services to this server configuration using our modular architecture built with **[flake-parts](https://github.com/hercules-ci/flake-parts)** and **[import-tree](https://github.com/denful/import-tree)**.
 
@@ -20,7 +20,7 @@ modules/system/services/
 └── shell-repo.nix       # Shell-repo background daemon runner
 ```
 
-There are two primary ways to deploy a service on Flint:
+There are two primary ways to deploy a service on this server:
 1. **Native NixOS Services** (when the package exists in `nixpkgs`).
 2. **Declarative OCI Containers** (for container-first applications via Docker).
 

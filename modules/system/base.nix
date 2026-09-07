@@ -108,7 +108,7 @@
       # Environment
       environment.sessionVariables = {
         ZDOTDIR = "$HOME/.config/zsh";
-        FLINT_DIR = config.var.flakePath;
+        CONFIG_DIR = config.var.flakePath;
         NH_FLAKE = config.var.flakePath;
       };
 

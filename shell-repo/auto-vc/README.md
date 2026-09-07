@@ -42,7 +42,7 @@ homelab.shellRepo = {
   enable = true;
   autoVc = {
     enable = true;
-    repoPath = "/home/kryisnn/.config/flint"; # Target repository to monitor
+    repoPath = "/home/kryisnn/.config/config"; # Target repository to monitor
     intervalSeconds = 60;                    # Check frequency
     user = "kryisnn";
   };

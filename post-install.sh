@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Flint NixOS Post-Installation & GitHub 24/7 Deploy Key Setup Helper
+# NixOS Server Post-Installation & GitHub 24/7 Deploy Key Setup Helper
 # ==============================================================================
 # Run this script after booting into your new NixOS homelab server to:
 #  1. Generate and register a dedicated 24/7 GitHub Deploy Key (Write Access)
@@ -25,7 +25,7 @@ KEY_FILE="$SSH_DIR/id_github_deploy"
 REPO_DEFAULT="davindakhrisna/server-nixos"
 
 echo -e "${BLUE}${BOLD}====================================================${NC}"
-echo -e "${BLUE}${BOLD}   ❄️  Flint Server: Post-Installation Setup Helper  ${NC}"
+echo -e "${BLUE}${BOLD}   ❄️  NixOS Server: Post-Installation Setup Helper  ${NC}"
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo ""
 

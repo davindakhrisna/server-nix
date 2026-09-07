@@ -1,6 +1,6 @@
 # 💾 Complete Installation & Deployment Guide
 
-This guide covers installing and deploying the **Flint NixOS Homelab Server** on bare-metal hardware (laptops, mini-PCs, workstations, or servers) as well as remote installations via `nixos-anywhere`.
+This guide covers installing and deploying the **NixOS Homelab Server** on bare-metal hardware (laptops, mini-PCs, workstations, or servers) as well as remote installations via `nixos-anywhere`.
 
 ---
 
@@ -23,7 +23,7 @@ Standard NixOS installations on systems with low RAM ($\le 4\text{GB}$) or on li
 2. Disko formats swap but does not activate it during the live installation session.
 3. Nix parallel builds spawn too many jobs (`max-jobs`) and saturate memory.
 
-**Flint's [`install.sh`](../install.sh) automates three layers of hardware protection:**
+**The [`install.sh`](../install.sh) script automates three layers of hardware protection:**
 - 🔄 **Immediate Swap Activation (`swapon`):** The installer detects whether your drive is NVMe, SATA, eMMC, or virtual, and immediately activates the 8 GB swap partition before any package compilation begins.
 - 📂 **Target Disk Temporary Directory (`TMPDIR=/mnt/tmp`):** Build artifacts and store paths are written to the target disk instead of the RAM `tmpfs`.
 - ⚙️ **Dynamic Build Throttling:** On machines with $\le 6\text{GB}$ of physical RAM, the installer constrains compilation to `--option max-jobs 2 --option cores 2`.
@@ -52,8 +52,8 @@ Use this method when booting the target server from a standard NixOS Minimal ISO
 
 ### Step 3: Clone Configuration
 ```bash
-git clone https://github.com/davindakhrisna/server-nixos.git /tmp/flint
-cd /tmp/flint
+git clone https://github.com/davindakhrisna/server-nixos.git /tmp/config
+cd /tmp/config
 ```
 
 ### Step 4: Identify Target Disk
@@ -77,7 +77,7 @@ The script will:
 2. Partition the disk with Disko (ESP `/boot`, Swap, Btrfs subvolumes: `@`, `@home`, `@nix`, `@persist`, `@log`).
 3. Activate swap immediately and route `TMPDIR` to disk.
 4. Install NixOS to `/mnt`.
-5. Copy the configuration repository into `/mnt/home/kryisnn/.config/flint`.
+5. Copy the configuration repository into `/mnt/home/kryisnn/.config/config`.
 6. Prompt you to enter a password for user `kryisnn` via `nixos-enter`.
 7. Prompt to reboot into your new installation.
 
@@ -85,7 +85,7 @@ The script will:
 
 ## 🌐 Method 2: Remote Deployment over SSH (`nixos-anywhere`)
 
-Deploy Flint remotely onto an existing Linux server (e.g., Ubuntu, Debian, or generic VPS) without creating a live USB.
+Deploy NixOS remotely onto an existing Linux server (e.g., Ubuntu, Debian, or generic VPS) without creating a live USB.
 
 ### Prerequisites
 - Target machine accessible via SSH as `root` (or with passwordless `sudo`).
@@ -97,7 +97,7 @@ From your local development machine:
 ./install.sh --mode remote --host homelab --target root@192.168.1.100 --disk /dev/sda
 ```
 
-`nixos-anywhere` will kexec into a NixOS in-memory installer, partition the remote disk, install Flint, and reboot into your configured server.
+`nixos-anywhere` will kexec into a NixOS in-memory installer, partition the remote disk, install NixOS, and reboot into your configured server.
 
 ---
 
@@ -106,7 +106,7 @@ From your local development machine:
 After the server reboots and you log in as `kryisnn`:
 
 ```bash
-cd ~/.config/flint
+cd ~/.config/config
 ./post-install.sh
 ```
 
@@ -120,7 +120,7 @@ This interactive helper completes:
 ## 💻 Headless Laptop Operation
 
 If your server is a repurposed laptop:
-- **Lid Close:** Closing the lid will **not** suspend or shut down the machine. Flint configures:
+- **Lid Close:** Closing the lid will **not** suspend or shut down the machine. The server configures:
   ```nix
   services.logind.settings = {
     HandleLidSwitch = "ignore";

@@ -18,7 +18,7 @@
             email = "arpeggio.gns@gmail.com";
           };
           init.defaultBranch = "main";
-          safe.directory = [(osConfig.var.flakePath or "${config.home.homeDirectory}/.config/flint") "*"];
+          safe.directory = [(osConfig.var.flakePath or "${config.home.homeDirectory}/.config/config") "*"];
         };
       };
 

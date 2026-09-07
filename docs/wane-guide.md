@@ -1,6 +1,6 @@
 # 👁️ WANE Watcher & CLI Guide
 
-**WANE (Warnings And Errors)** is an intelligent 24/7 log collector and terminal inspector designed for the Flint Homelab Server. It continuously monitors the `systemd` journal for system degradation, container crashes, and hardware warnings, writing them to a centralized log file and providing an instant CLI inspector.
+**WANE (Warnings And Errors)** is an intelligent 24/7 log collector and terminal inspector designed for the NixOS Homelab Server. It continuously monitors the `systemd` journal for system degradation, container crashes, and hardware warnings, writing them to a centralized log file and providing an instant CLI inspector.
 
 ---
 
@@ -74,7 +74,7 @@ Example output:
    WANE Watcher: Collector Status
 ========================================
 Daemon Status:   ACTIVE (Running)
-Log File Path:   /home/kryisnn/.config/flint/wane-log
+Log File Path:   /home/kryisnn/.config/config/wane-log
 Log File Size:   248 KB
 Total Lines:     1,420
 Warnings (WARN): 1,180
@@ -100,7 +100,7 @@ WANE is enabled declaratively in [`hosts/homelab/default.nix`](../hosts/homelab/
 ```nix
 homelab.shellRepo.waneWatcher = {
   enable = true;
-  logFile = "/home/kryisnn/.config/flint/wane-log"; # Log destination
+  logFile = "/home/kryisnn/.config/config/wane-log"; # Log destination
   maxLogSizeMB = 50;                               # Auto-rotation threshold
   user = "root";                                   # Collector process user
 };

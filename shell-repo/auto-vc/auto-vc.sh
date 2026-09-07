@@ -23,7 +23,7 @@ fi
 # ------------------------------------------------------------------------------
 # Default Settings
 # ------------------------------------------------------------------------------
-REPO_PATH="${REPO_PATH:-${FLINT_DIR:-$HOME/.config/flint}}"
+REPO_PATH="${REPO_PATH:-${CONFIG_DIR:-$HOME/.config/config}}"
 GIT_BRANCH="${GIT_BRANCH:-main}"
 GIT_REMOTE="${GIT_REMOTE:-origin}"
 CHECK_INTERVAL="${CHECK_INTERVAL:-60}"
