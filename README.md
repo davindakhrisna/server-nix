@@ -54,7 +54,7 @@ graph TD
 - 📸 **Media & Cloud Stack:** Production-ready **Immich**, **Glance** dashboard, **Vaultwarden**, **Obsidian LiveSync** (CouchDB), and **Samba NAS**.
 - 🔄 **Auto-VC 24/7:** Automated continuous staging, conventional committing, and rebase pushing using dedicated GitHub deploy keys.
 - 👁️ **WANE Watcher & CLI:** Real-time warning and error journal watcher with an instant terminal inspector (`wane --show`, `wane --clear`, `wane --status`, `wane --follow`).
-- 🐚 **Shell-Repo Runner & Private Forking:** Systemd service runner for custom automation daemons, with turnkey export tooling to keep private scripts in a dedicated private repository.
+- 🐚 **Shell-Repo Runner:** Systemd service runner for custom background daemons (**Photo Gallery** camera capture, **Auto-VC** 24/7 git sync, **WANE Watcher** error collector) with isolated runtime packages.
 - 🌐 **Zero-Trust Tailscale:** Automatic peer-to-peer mesh networking and passwordless Tailscale SSH.
 
 ---
@@ -104,17 +104,14 @@ sudo ./install.sh --disk /dev/nvme0n1 --host homelab
 # 3. Post-Installation Setup (GitHub 24/7 Deploy Key & Tailscale)
 ./post-install.sh
 
-# 4. Fork shell-repo into a Private Repository
-./scripts/export-shell-repo.sh --repo-url git@github.com:davindakhrisna/homelab-shell-repo.git --mode submodule
-
-# 5. Inspect System Warnings & Errors
+# 4. Inspect System Warnings & Errors
 wane --show 20 desc all
 wane --status
 
-# 6. Rebuild System after Config Changes
+# 5. Rebuild System after Config Changes
 nh os switch
 
-# 7. Check & Lint Nix Flake
+# 6. Check & Lint Nix Flake
 nix flake check --impure
 nix run nixpkgs#alejandra -- .
 nix run nixpkgs#statix -- check .
@@ -125,12 +122,13 @@ nix run nixpkgs#deadnix -- .
 
 ## 🔒 Private Repository Recommendation
 
-`shell-repo/` contains your personal automation daemons, camera configurations, and host-specific scripts. We strongly recommend forking `shell-repo` into a private Git repository to keep sensitive paths and hardware nodes separate from your main NixOS configuration.
+Because this repository contains your personal homelab configuration—including hostnames, user accounts (`kryisnn`), authorized SSH keys, Tailscale networks, and 24/7 automated git push daemons—it is strongly recommended to **fork or host this entire repository as a private Git repository** on GitHub, GitLab, or your self-hosted Forgejo instance.
 
-Follow our [Shell-Repo Private Repo Guide](docs/shell-repo.md) or run:
+To push changes to your private repository 24/7 without exposing personal credentials, run:
 ```bash
-./scripts/export-shell-repo.sh
+./post-install.sh
 ```
+This generates a dedicated GitHub deploy key (`~/.ssh/id_github_deploy`) with scoped write permissions.
 
 ---
 
