@@ -143,12 +143,33 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+# 0. Live ISO Environment Memory Expansion (Prevent "No space left on device")
+echo -e "${CYAN}${BOLD}[0/3] Optimizing Live ISO temporary filesystems...${NC}"
+
+# Expand in-memory Nix store quota (default is only 50% of RAM, often 1-2GB)
+if grep -qs '/nix/.rw-store' /proc/mounts; then
+    echo -e "  ${GREEN}==>${NC} Expanding in-memory /nix/.rw-store to 16GB..."
+    mount -o remount,size=16G,noatime /nix/.rw-store 2>/dev/null || true
+fi
+
+# Expand /tmp quota if mounted on tmpfs
+if grep -qs ' /tmp tmpfs' /proc/mounts; then
+    mount -o remount,size=8G /tmp 2>/dev/null || true
+fi
+
+# Activate any existing swap partitions available across all drives
+for existing_swap in $(lsblk -ln -o NAME,FSTYPE 2>/dev/null | awk '$2=="swap" {print "/dev/"$1}'); do
+    if swapon "$existing_swap" 2>/dev/null; then
+        echo -e "  ${GREEN}✓ Enabled existing swap on ${BOLD}${existing_swap}${NC} for extra memory headroom"
+    fi
+done
+
 # Select Disk if not specified
 if [[ -z "$TARGET_DISK" ]]; then
-    echo -e "${YELLOW}Detected storage drives on this machine:${NC}"
-    echo "----------------------------------------------------"
-    lsblk -d -p -n -o NAME,SIZE,TYPE,MODEL | grep -E "disk" || true
-    echo "----------------------------------------------------"
+    echo -e "\n${YELLOW}Detected storage drives on this machine:${NC}"
+    echo "----------------------------------------------------------------------"
+    lsblk -p -o NAME,SIZE,TYPE,MODEL,FSTYPE,MOUNTPOINTS | grep -E "(NAME|disk)" || true
+    echo "----------------------------------------------------------------------"
     echo ""
     read -rp "Enter target disk to wipe and install to (e.g., /dev/nvme0n1 or /dev/sda): " TARGET_DISK
 fi
@@ -158,11 +179,33 @@ if [[ ! -b "$TARGET_DISK" ]]; then
     exit 1
 fi
 
+# Safety Guard: Ensure user is NOT wiping the running Live USB installer drive
+if lsblk -no FSTYPE,LABEL,MOUNTPOINTS "$TARGET_DISK" 2>/dev/null | grep -E "(iso9660|NIXOS|/iso|/cdrom|/run/iso)" >/dev/null 2>&1; then
+    echo -e "\n${RED}${BOLD}========================================================================${NC}"
+    echo -e "${RED}${BOLD}❌ ERROR: CANNOT INSTALL TO LIVE INSTALLER MEDIA (${TARGET_DISK})!${NC}"
+    echo -e "${RED}${BOLD}========================================================================${NC}"
+    echo -e "${YELLOW}'$TARGET_DISK' appears to be the NixOS Live USB flash drive you booted from!${NC}"
+    echo -e "Installing to this device will destroy the installer and cause 'No space left on device'."
+    echo ""
+    echo -e "Please check all available drives below and choose your actual internal SSD/HDD:"
+    echo "----------------------------------------------------------------------"
+    lsblk -p -o NAME,SIZE,TYPE,MODEL,FSTYPE,MOUNTPOINTS
+    echo "----------------------------------------------------------------------"
+    exit 1
+fi
+
+# Check drive capacity
+DISK_SIZE_BYTES=$(lsblk -b -d -n -o SIZE "$TARGET_DISK" 2>/dev/null || echo 0)
+DISK_SIZE_GB=$(( DISK_SIZE_BYTES / 1024 / 1024 / 1024 ))
+if [ "$DISK_SIZE_GB" -lt 20 ] && [ "$DISK_SIZE_GB" -gt 0 ]; then
+    echo -e "\n${YELLOW}⚠️  Warning: Target disk '$TARGET_DISK' is only ${DISK_SIZE_GB}GB.${NC}"
+    echo -e "Disko partitions 1GB for ESP and 8GB for swap, leaving ~$(( DISK_SIZE_GB - 9 ))GB for root."
+fi
+
 # Update disk device in hosts/$HOST_NAME/_disko.nix if needed
 DISKO_FILE="hosts/$HOST_NAME/_disko.nix"
 if [[ -f "$DISKO_FILE" ]]; then
-    echo -e "${GREEN}==>${NC} Updating target disk in $DISKO_FILE to ${BOLD}$TARGET_DISK${NC}..."
-    # Replace device = ... with device = lib.mkDefault "$TARGET_DISK";
+    echo -e "\n${GREEN}==>${NC} Updating target disk in $DISKO_FILE to ${BOLD}$TARGET_DISK${NC}..."
     sed -i "s|device = lib.mkDefault \".*\";|device = lib.mkDefault \"$TARGET_DISK\";|" "$DISKO_FILE"
     git add "$DISKO_FILE" 2>/dev/null || true
 fi
@@ -173,7 +216,7 @@ echo -e "${RED}${BOLD}====================================================${NC}"
 echo -e "${RED}${BOLD}       ⚠️  CRITICAL DATA LOSS WARNING ⚠️            ${NC}"
 echo -e "${RED}${BOLD}====================================================${NC}"
 echo -e "You are about to ${RED}${BOLD}COMPLETELY WIPE AND REPARTITION${NC}:"
-echo -e "  Disk:       ${YELLOW}${BOLD}$TARGET_DISK${NC}"
+echo -e "  Disk:        ${YELLOW}${BOLD}$TARGET_DISK${NC} (${DISK_SIZE_GB} GB)"
 echo -e "  Host Config: ${YELLOW}${BOLD}$HOST_NAME${NC}"
 echo ""
 echo -e "All existing partitions and data on ${BOLD}$TARGET_DISK${NC} will be permanently erased."
@@ -195,8 +238,11 @@ nix --extra-experimental-features "nix-command flakes" run github:nix-community/
 
 echo -e "\n${GREEN}✓ Partitions formatted and mounted to /mnt successfully.${NC}"
 
-# 1.5 Memory Protection (Prevent OOM on systems with <= 4GB RAM)
-echo -e "\n${GREEN}==>${NC} Configuring memory protection for low-RAM safety..."
+# Settle udev events to ensure new partition device nodes exist
+udevadm settle 2>/dev/null || sleep 2
+
+# 1.5 Memory Protection (Prevent OOM & "No space left on device" during closure build)
+echo -e "\n${GREEN}==>${NC} Configuring storage & memory protection..."
 
 # Activate the 8GB swap partition created on the target disk by Disko
 SWAP_ACTIVATED=false
@@ -208,29 +254,47 @@ for part in $(lsblk -ln -o NAME,FSTYPE "$TARGET_DISK" 2>/dev/null | awk '$2=="sw
     fi
 done
 
-# If swap partition was not automatically detected, create an emergency swapfile on /mnt
+# If swap partition was not automatically detected, try formatting and activating partition 2
 if [[ "$SWAP_ACTIVATED" != true ]]; then
-    echo -e "  ${YELLOW}Creating 4GB emergency swapfile on target disk (/mnt/swapfile)...${NC}"
-    dd if=/dev/zero of=/mnt/swapfile bs=1M count=4096 status=none 2>/dev/null || true
-    chmod 600 /mnt/swapfile 2>/dev/null || true
-    mkswap /mnt/swapfile >/dev/null 2>&1 || true
-    swapon /mnt/swapfile 2>/dev/null || true
+    # In MBR/GPT, partition 2 is swap in our layout (e.g. /dev/sda2 or /dev/nvme0n1p2)
+    for candidate in "${TARGET_DISK}2" "${TARGET_DISK}p2"; do
+        if [[ -b "$candidate" ]]; then
+            mkswap -f "$candidate" >/dev/null 2>&1 || true
+            if swapon "$candidate" 2>/dev/null; then
+                echo -e "  ${GREEN}✓ Activated swap on ${BOLD}${candidate}${NC}"
+                SWAP_ACTIVATED=true
+                break
+            fi
+        fi
+    done
 fi
 
-# Relocate build TMPDIR to target NVMe/SSD instead of RAM-backed tmpfs
+# Further expand /nix/.rw-store now that 8GB disk swap is active
+if grep -qs '/nix/.rw-store' /proc/mounts; then
+    echo -e "  ${GREEN}==>${NC} Expanding /nix/.rw-store to 32GB (backed by disk swap)..."
+    mount -o remount,size=32G,noatime /nix/.rw-store 2>/dev/null || true
+fi
+
+# Relocate build TMPDIR to target disk instead of RAM-backed tmpfs
 mkdir -p /mnt/tmp
 chmod 1777 /mnt/tmp
 export TMPDIR=/mnt/tmp
-echo -e "  ${GREEN}✓ Relocated build TMPDIR to NVMe storage (/mnt/tmp)${NC} (saves RAM)"
+echo -e "  ${GREEN}✓ Relocated build TMPDIR to target storage (/mnt/tmp)${NC} (saves RAM)"
 
 # Detect available RAM and constrain parallel jobs if <= 6GB
 MEM_TOTAL_KB=$(grep -i MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo 8000000)
 MEM_TOTAL_GB=$(( MEM_TOTAL_KB / 1024 / 1024 ))
 EXTRA_INSTALL_ARGS=()
 if [ "$MEM_TOTAL_GB" -le 6 ]; then
-    echo -e "  ${YELLOW}Detected low physical RAM (${MEM_TOTAL_GB}GB). Limiting parallel build jobs...${NC}"
+    echo -e "  ${YELLOW}Detected physical RAM <= 6GB (${MEM_TOTAL_GB}GB). Limiting build jobs...${NC}"
     EXTRA_INSTALL_ARGS+=(--option max-jobs 2 --option cores 2)
 fi
+
+# Display current memory & mount state for transparency
+echo -e "\n${BLUE}--- Storage & Memory Status ---${NC}"
+free -h 2>/dev/null | grep -E "(Mem|Swap)" || true
+df -h /mnt /mnt/boot /nix/.rw-store 2>/dev/null || true
+echo -e "${BLUE}-------------------------------${NC}"
 
 # 2. Run NixOS Install
 echo -e "\n${GREEN}${BOLD}[2/3] Installing NixOS system closure to /mnt...${NC}"
