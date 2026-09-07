@@ -315,7 +315,9 @@ echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository
 mkdir -p /mnt/home/kryisnn/.config/flint
 cp -r . /mnt/home/kryisnn/.config/flint/
 chown -R 1000:100 /mnt/home/kryisnn/.config/flint
-echo -e "  ${GREEN}✓ Configuration copied to /home/kryisnn/.config/flint${NC}"
+mkdir -p /mnt/etc
+ln -sfn /home/kryisnn/.config/flint /mnt/etc/nixos
+echo -e "  ${GREEN}✓ Configuration copied to /home/kryisnn/.config/flint (linked to /etc/nixos)${NC}"
 
 # Prompt to set password for primary user kryisnn (sudo access)
 echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}kryisnn${NC}:"
