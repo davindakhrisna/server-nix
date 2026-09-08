@@ -15,6 +15,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
+DIM='\033[2m'
 NC='\033[0m' # No Color
 
 # Defaults
@@ -22,6 +23,7 @@ MODE="local"
 HOST_NAME="homelab"
 TARGET_DISK=""
 REMOTE_TARGET=""
+CACHE_PATH=""
 SKIP_CONFIRM=false
 
 usage() {
@@ -34,6 +36,8 @@ ${BOLD}Options:${NC}
   -H, --host <hostname>       NixOS host configuration to install (default: homelab)
   -d, --disk <device>         Target disk (e.g., /dev/nvme0n1, /dev/sda, or /dev/disk/by-id/...)
   -t, --target <user@ip>      Remote SSH target (required for remote mode, e.g. root@192.168.1.50)
+  -c, --cache <path>          Path to pre-built nix binary cache (e.g., /mnt-usb/nix-cache)
+                              Auto-detected from USB if not specified.
   -y, --yes                   Skip confirmation prompt (DANGEROUS: Wipes disk unattended)
   -h, --help                  Show this help message
 
@@ -45,7 +49,10 @@ ${BOLD}Examples:${NC}
   sudo ./install.sh --disk /dev/nvme0n1 --host homelab
 
   # 3. Remote install directly over running Ubuntu server via SSH:
-  ./install.sh --mode remote --host homelab --target root@192.168.1.100"
+  ./install.sh --mode remote --host homelab --target root@192.168.1.100
+
+  # 4. Local install with pre-built cache from USB (zero compilation):
+  sudo ./install.sh --cache /mnt-usb/nix-cache"
     exit 0
 }
 
@@ -66,6 +73,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--target)
             REMOTE_TARGET="$2"
+            shift 2
+            ;;
+        -c|--cache)
+            CACHE_PATH="$2"
             shift 2
             ;;
         -y|--yes)
@@ -261,14 +272,158 @@ if [[ -f "$HOST_DEFAULT" ]]; then
     git add "$HOST_DEFAULT" 2>/dev/null || true
 fi
 
+# 0.7 Detect or validate pre-built binary cache from USB (BEFORE disk wipe)
+CACHE_SUBSTITUTERS=""
+CACHE_INSTALL_ARGS=()
+CACHE_NAR_COUNT="0"
+
+# Guard: If USB was mounted under /mnt (e.g. /mnt/usb), Disko will format & mount the target
+# disk over /mnt, which completely shadows the USB! Move or bind-mount to /mnt-usb to prevent this.
+for shadowed_mount in /mnt/usb /mnt/ventoy /mnt/media; do
+    if grep -qs " ${shadowed_mount} " /proc/mounts; then
+        echo -e "  ${YELLOW}Notice:${NC} USB is mounted at ${shadowed_mount}. Moving to /mnt-usb to prevent mount shadowing by Disko..."
+        mkdir -p /mnt-usb
+        mount --bind "$shadowed_mount" /mnt-usb 2>/dev/null || true
+        umount -l "$shadowed_mount" 2>/dev/null || true
+        if [[ -n "$CACHE_PATH" && "$CACHE_PATH" == "${shadowed_mount}"* ]]; then
+            CACHE_PATH="/mnt-usb${CACHE_PATH#"${shadowed_mount}"}"
+        fi
+        break
+    fi
+done
+
+if [[ -n "$CACHE_PATH" ]]; then
+    # User explicitly specified cache path
+    # Handle if user passed directory containing nix-cache/ instead of the cache directory itself
+    if [[ ! -f "$CACHE_PATH/nix-cache-info" && -f "$CACHE_PATH/nix-cache/nix-cache-info" ]]; then
+        CACHE_PATH="$CACHE_PATH/nix-cache"
+    fi
+
+    # Handle /mnt/usb references if moved to /mnt-usb
+    if [[ ! -f "$CACHE_PATH/nix-cache-info" && "$CACHE_PATH" == /mnt/usb* ]]; then
+        alt_path="/mnt-usb${CACHE_PATH#/mnt/usb}"
+        if [[ -f "$alt_path/nix-cache-info" ]]; then
+            CACHE_PATH="$alt_path"
+        elif [[ -f "$alt_path/nix-cache/nix-cache-info" ]]; then
+            CACHE_PATH="$alt_path/nix-cache"
+        fi
+    fi
+
+    if [[ -f "$CACHE_PATH/nix-cache-info" ]]; then
+        CACHE_SUBSTITUTERS="file://$CACHE_PATH"
+        echo -e "\n${GREEN}==> ✓ Using pre-built cache:${NC} ${BOLD}$CACHE_PATH${NC}"
+    else
+        echo -e "\n${RED}Error:${NC} Specified cache path '$CACHE_PATH' is not a valid nix binary cache (missing nix-cache-info)." >&2
+        echo -e "${YELLOW}Common causes & quick fixes:${NC}"
+        echo -e "  1. Ventoy USB was mounted under /mnt (e.g. /mnt/usb). Disko mounts the target drive to /mnt and shadows it."
+        echo -e "     Mount to /mnt-usb instead: mkdir -p /mnt-usb && mount /dev/sdX1 /mnt-usb"
+        echo -e "  2. Wrong partition mounted (Ventoy has 2 partitions: mount the large exFAT/NTFS one, NOT VTOYEFI)."
+        echo -e "  3. Check mounted drives with: lsblk -f"
+        exit 1
+    fi
+else
+    # Auto-detect: look for nix-cache/ on USB/removable media
+    echo -e "\n${GREEN}==>$NC Scanning for pre-built binary cache on USB..."
+    CACHE_SEARCH_PATHS=()
+
+    # Scan all mounted removable/hotplug devices (strictly excluding /mnt and subpaths)
+    while IFS= read -r mp; do
+        [[ -n "$mp" && -d "$mp" && "$mp" != "/mnt" && "$mp" != /mnt/* ]] && CACHE_SEARCH_PATHS+=("$mp")
+    done < <(lsblk -o MOUNTPOINT,HOTPLUG -nr 2>/dev/null | awk '$2=="1" && $1!="" {print $1}')
+
+    # Check common manual mount points (outside of /mnt)
+    for candidate_dir in /mnt-usb /media /usb /tmp/usb; do
+        [[ -d "$candidate_dir" ]] && CACHE_SEARCH_PATHS+=("$candidate_dir")
+    done
+    if [[ -d "/media" ]]; then
+        for candidate_dir in /media/*; do
+            [[ -d "$candidate_dir" ]] && CACHE_SEARCH_PATHS+=("$candidate_dir")
+        done
+    fi
+    if [[ -d "/run/media" ]]; then
+        for candidate_dir in /run/media/*/*; do
+            [[ -d "$candidate_dir" ]] && CACHE_SEARCH_PATHS+=("$candidate_dir")
+        done
+    fi
+
+    # Check parent of where install.sh is running from (if running from USB copy)
+    PARENT_OF_SCRIPT="$(dirname "$SCRIPT_DIR")"
+    [[ -d "$PARENT_OF_SCRIPT" && "$PARENT_OF_SCRIPT" != "/mnt" && "$PARENT_OF_SCRIPT" != /mnt/* ]] && CACHE_SEARCH_PATHS+=("$PARENT_OF_SCRIPT")
+
+    # Search for nix-cache/ or direct nix-cache-info in candidate paths
+    for search_path in "${CACHE_SEARCH_PATHS[@]}"; do
+        if [[ -f "$search_path/nix-cache/nix-cache-info" ]]; then
+            CACHE_PATH="$search_path/nix-cache"
+            CACHE_SUBSTITUTERS="file://$CACHE_PATH"
+            echo -e "  ${GREEN}✓ Found pre-built cache:${NC} ${BOLD}$CACHE_PATH${NC}"
+            break
+        elif [[ -f "$search_path/nix-cache-info" ]]; then
+            CACHE_PATH="$search_path"
+            CACHE_SUBSTITUTERS="file://$CACHE_PATH"
+            echo -e "  ${GREEN}✓ Found pre-built cache:${NC} ${BOLD}$CACHE_PATH${NC}"
+            break
+        fi
+    done
+
+    # If still not found, try auto-discovering unmounted USB partitions (e.g. Ventoy data partition)
+    if [[ -z "$CACHE_SUBSTITUTERS" ]]; then
+        while IFS= read -r dev; do
+            [[ -z "$dev" ]] && continue
+            if [[ -n "$TARGET_DISK" && "$dev" =~ ^"$TARGET_DISK" ]]; then
+                continue
+            fi
+            mkdir -p /mnt-usb
+            if mount -o ro "$dev" /mnt-usb 2>/dev/null; then
+                if [[ -f "/mnt-usb/nix-cache/nix-cache-info" ]]; then
+                    CACHE_PATH="/mnt-usb/nix-cache"
+                    CACHE_SUBSTITUTERS="file://$CACHE_PATH"
+                    echo -e "  ${GREEN}✓ Auto-mounted USB partition ($dev) at /mnt-usb${NC}"
+                    echo -e "  ${GREEN}✓ Found pre-built cache:${NC} ${BOLD}$CACHE_PATH${NC}"
+                    break
+                elif [[ -f "/mnt-usb/nix-cache-info" ]]; then
+                    CACHE_PATH="/mnt-usb"
+                    CACHE_SUBSTITUTERS="file://$CACHE_PATH"
+                    echo -e "  ${GREEN}✓ Auto-mounted USB partition ($dev) at /mnt-usb${NC}"
+                    echo -e "  ${GREEN}✓ Found pre-built cache:${NC} ${BOLD}$CACHE_PATH${NC}"
+                    break
+                else
+                    umount /mnt-usb 2>/dev/null || true
+                fi
+            fi
+        done < <(lsblk -lno NAME,TYPE,FSTYPE 2>/dev/null | awk '$2=="part" && ($3=="exfat" || $3=="ntfs" || $3=="vfat" || $3=="ext4") {print "/dev/"$1}')
+    fi
+
+    if [[ -z "$CACHE_SUBSTITUTERS" ]]; then
+        echo -e "  ${YELLOW}No pre-built cache found on USB.${NC}"
+        echo -e "  ${DIM}The system will be built from source / downloaded from cache.nixos.org.${NC}"
+        echo -e "  ${DIM}On low-RAM systems (<6GB), consider using pre-build.sh first.${NC}"
+    fi
+fi
+
+if [[ -n "$CACHE_SUBSTITUTERS" ]]; then
+    CACHE_NAR_COUNT=$(find "$CACHE_PATH" -name "*.narinfo" 2>/dev/null | wc -l || echo "0")
+    echo -e "  Cache contains ${CYAN}${CACHE_NAR_COUNT}${NC} pre-built store paths"
+    echo -e "  ${DIM}Installation will copy from local cache — zero compilation.${NC}"
+    CACHE_INSTALL_ARGS=(
+        --option substituters "$CACHE_SUBSTITUTERS https://cache.nixos.org/"
+        --option trusted-substituters "$CACHE_SUBSTITUTERS https://cache.nixos.org/"
+        --option require-sigs false
+    )
+fi
+
 # Safety Confirmation
 echo ""
 echo -e "${RED}${BOLD}====================================================${NC}"
 echo -e "${RED}${BOLD}       ⚠️  CRITICAL DATA LOSS WARNING ⚠️            ${NC}"
 echo -e "${RED}${BOLD}====================================================${NC}"
 echo -e "You are about to ${RED}${BOLD}COMPLETELY WIPE AND REPARTITION${NC}:"
-echo -e "  Disk:        ${YELLOW}${BOLD}$TARGET_DISK${NC} (${DISK_SIZE_GB} GB)"
-echo -e "  Host Config: ${YELLOW}${BOLD}$HOST_NAME${NC}"
+echo -e "  Disk:         ${YELLOW}${BOLD}$TARGET_DISK${NC} (${DISK_SIZE_GB} GB)"
+echo -e "  Host Config:  ${YELLOW}${BOLD}$HOST_NAME${NC}"
+if [[ -n "$CACHE_SUBSTITUTERS" ]]; then
+echo -e "  Binary Cache: ${GREEN}${BOLD}$CACHE_PATH${NC} (${CYAN}${CACHE_NAR_COUNT}${NC} store paths)"
+else
+echo -e "  Binary Cache: ${YELLOW}None (will build/download from cache.nixos.org)${NC}"
+fi
 echo ""
 echo -e "All existing partitions and data on ${BOLD}$TARGET_DISK${NC} will be permanently erased."
 echo ""
@@ -356,7 +511,7 @@ echo -e "${BLUE}-------------------------------${NC}"
 
 # 2. Run NixOS Install
 echo -e "\n${GREEN}${BOLD}[2/3] Installing NixOS system closure to /mnt...${NC}"
-nixos-install --flake ".#$HOST_NAME" --no-channel-copy "${EXTRA_INSTALL_ARGS[@]}"
+nixos-install --flake ".#$HOST_NAME" --no-channel-copy "${CACHE_INSTALL_ARGS[@]}" "${EXTRA_INSTALL_ARGS[@]}"
 
 # 2.5 Post-Install System Configuration
 echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository..."
