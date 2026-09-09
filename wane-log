@@ -937,3 +937,19 @@
 [2026-09-09 21:17:10] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
 [2026-09-09 21:17:10] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
 [2026-09-09 21:17:10] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:17:25] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:17:25] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:17:25] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:17:25] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:17:40] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:17:40] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:17:40] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:17:40] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:17:56] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:17:56] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:17:56] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:17:56] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:18:11] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:18:11] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:18:11] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:18:11] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
