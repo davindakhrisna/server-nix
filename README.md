@@ -63,17 +63,15 @@ graph TD
 
 | Service | Port | Category | Type | Default URL |
 | :--- | :--- | :--- | :--- | :--- |
-| **Glance Dashboard** | `8080` | Overview & Metrics | Native NixOS | `http://<server-ip>:8080` |
-| **Immich** | `2283` | Photos & Video | Native NixOS | `http://<server-ip>:2283` |
-| **n8n** | `5678` | Workflow Automation | Native NixOS | `http://<server-ip>:5678` |
-| **OpenHands** | `3000` | AI Software Engineer | Docker OCI | `http://<server-ip>:3000` |
-| **9Router** | `20128` | LLM Gateway & Router | Docker OCI | `http://<server-ip>:20128` |
-| **Headroom** | `8787` | Context Compression | Docker OCI | `http://<server-ip>:8787` |
-| **Vaultwarden** | `8222` | Password Manager | Native NixOS | `http://<server-ip>:8222` |
-| **Obsidian LiveSync**| `5984` | Note Synchronization | Native CouchDB | `http://<server-ip>:5984` |
-| **Samba NAS** | `139, 445` | Local Storage | Native Samba | `smb://<server-ip>/` |
-| **Auto-VC** | N/A | Git Automation | Systemd Daemon | Terminal / Git Remote |
-| **WANE Watcher** | N/A | Log Inspection | Systemd Daemon | CLI: `wane --show` |
+| **Glance Dashboard** | `8080` | Overview & Metrics | Native | `http://<server-ip>:8080` |
+| **Immich** | `2283` | Photos & Video | Native | `http://<server-ip>:2283` |
+| **n8n** | `5678` | Workflow Automation | Native | `http://<server-ip>:5678` |
+| **Vaultwarden** | `8222` | Password Manager | Native | `http://<server-ip>:8222` |
+| **Obsidian LiveSync**| `5984` | Note Synchronization | Native | `http://<server-ip>:5984` |
+| **Samba NAS** | `139, 445` | Local Storage | Native | `smb://<server-ip>/` |
+| **OpenHands** | `3000` | AI Software Engineer | Docker | `http://<server-ip>:3000` |
+| **9Router** | `20128` | LLM Gateway & Router | Docker | `http://<server-ip>:20128` |
+| **Headroom** | `8787` | Context Compression | Docker | `http://<server-ip>:8787` |
 
 *For storage paths, environment files, and service configuration options, see the [Services Guide](docs/services.md).*
 
