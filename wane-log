@@ -1391,3 +1391,36 @@
 [2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.ModemManager1' in service file '/nix/store/nasw2v3yzqxbcz7633zjygg42hdv0i2f-modemmanager-1.24.2/share/dbus-1/system-services/org.freedesktop.ModemManager1.service'
 [2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.UDisks2' in service file '/nix/store/fny6q89v8gmqhdvr29jsa0ysjlrpc0p2-udisks-2.11.2/share/dbus-1/system-services/org.freedesktop.UDisks2.service'
 [2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.PolicyKit1' in service file '/nix/store/g2idqgjmv239g4g7bzs9p8ir6np5yr7m-polkit-127/share/dbus-1/system-services/org.freedesktop.PolicyKit1.service'
+[2026-09-09 21:51:40] [WARN] [init.scope] dev-tpm0.device: Job dev-tpm0.device/start timed out.
+[2026-09-09 21:51:40] [ERROR] [init.scope] Timed out waiting for device /dev/tpm0.
+[2026-09-09 21:51:40] [WARN] [init.scope] dev-tpmrm0.device: Job dev-tpmrm0.device/start timed out.
+[2026-09-09 21:51:40] [ERROR] [init.scope] Timed out waiting for device /dev/tpmrm0.
+[2026-09-09 21:51:43] [WARN] [init.scope] docker.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:43] [ERROR] [init.scope] Failed to start Docker Application Container Engine.
+[2026-09-09 21:51:46] [WARN] [init.scope] docker.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:46] [ERROR] [init.scope] Failed to start Docker Application Container Engine.
+[2026-09-09 21:51:50] [WARN] [init.scope] docker.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:50] [ERROR] [init.scope] Failed to start Docker Application Container Engine.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker.service: Start request repeated too quickly.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker.service: Failed with result 'start-limit-hit'.
+[2026-09-09 21:51:52] [ERROR] [init.scope] Failed to start Docker Application Container Engine.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker.socket: Failed with result 'service-start-limit-hit'.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:52] [ERROR] [nixos] switching to system configuration /nix/store/h0h6rhcfl79v4l3lizd1svmr4hjjck33-nixos-system-homelab-26.11.20260823.56c02bc failed (status 4)
+[2026-09-09 21:51:52] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:52] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:53] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:53] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:53] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:53] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:54] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:54] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:54] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:54] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:51:55] [WARN] [init.scope] docker-headroom.service: Start request repeated too quickly.
+[2026-09-09 21:51:55] [WARN] [init.scope] docker-headroom.service: Failed with result 'start-limit-hit'.
+[2026-09-09 21:51:55] [ERROR] [init.scope] Failed to start docker-headroom.service.
+[2026-09-09 21:51:55] [WARN] [init.scope] docker-nine-router.service: Start request repeated too quickly.
+[2026-09-09 21:51:55] [WARN] [init.scope] docker-nine-router.service: Failed with result 'start-limit-hit'.
+[2026-09-09 21:51:55] [ERROR] [init.scope] Failed to start docker-nine-router.service.
