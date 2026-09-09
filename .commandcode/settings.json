@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(ssh -o ConnectTimeout=8 -o BatchMode=yes kryisnn@100.119.213.3 \"echo tailscale-ssh-ok\" 2>&1)",
+      "Shell(ssh -v -o ConnectTimeout=8 kryisnn@100.119.213.3 echo ok 2 >& 1)",
+      "Shell(findstr:*)",
+      "Shell(ssh-keygen -y -P \"\" -f \"C:\\Users\\kris\\.ssh\\id_ed25519\" >nul 2>&1 && echo NO-PASSPHRASE || echo HAS-PASSPHRASE-OR-ERROR)",
+      "Shell(ssh-keygen:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

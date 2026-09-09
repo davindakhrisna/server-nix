@@ -38,7 +38,9 @@
                     {
                       type = "clock";
                       hour-format = "24h";
-                      timezones = ["Asia/Jakarta"];
+                      timezones = [
+                        {timezone = "Asia/Jakarta";}
+                      ];
                     }
                     {
                       type = "bookmarks";
