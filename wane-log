@@ -1442,3 +1442,7 @@
 [2026-09-09 22:09:41] [ERROR] [docker.service] To eliminate this warning, add "type": "module" to /app/package.json.
 [2026-09-09 22:09:41] [ERROR] [docker.service] (Use `node --trace-warnings ...` to show where the warning was created)
 [2026-09-09 22:10:01] [ERROR] [docker.service] [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+[2026-09-09 22:10:59] [WARN] [init.scope] dev-tpm0.device: Job dev-tpm0.device/start timed out.
+[2026-09-09 22:10:59] [ERROR] [init.scope] Timed out waiting for device /dev/tpm0.
+[2026-09-09 22:10:59] [WARN] [init.scope] dev-tpmrm0.device: Job dev-tpmrm0.device/start timed out.
+[2026-09-09 22:10:59] [ERROR] [init.scope] Timed out waiting for device /dev/tpmrm0.
