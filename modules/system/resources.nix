@@ -26,9 +26,15 @@
             MemoryHigh = "1G";
           };
         });
-      virtualisation.docker.daemon.settings.log-opts = {
-        max-size = "10m";
-        max-file = "3";
+      # Pin json-file explicitly: newer Docker defaults to the journald log
+      # driver on systemd hosts, which does not support max-size/max-file and
+      # refuses to start if they are set.
+      virtualisation.docker.daemon.settings = {
+        log-driver = "json-file";
+        log-opts = {
+          max-size = "10m";
+          max-file = "3";
+        };
       };
     };
   };
