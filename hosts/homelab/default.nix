@@ -52,6 +52,23 @@
           ssh.enable = true;
           immich.enable = true;
           glance.enable = true;
+
+          # HTTPS via tailscale serve (needs MagicDNS + HTTPS certs enabled in
+          # the Tailscale admin console). Additive - plain http://homelab:<port>
+          # keeps working on the LAN.
+          tailscaleServe = {
+            enable = true;
+            routes = {
+              "/glance" = 8080;
+              "/n8n" = 5678;
+              "/immich" = 2283;
+              "/vaultwarden" = 8222;
+              "/obsidian" = 5984;
+              "/openhands" = 3000;
+              "/9router" = 20128;
+              "/headroom" = 8787;
+            };
+          };
           vaultwarden = {
             enable = true;
             # Close open registration once your account exists
