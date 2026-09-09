@@ -110,6 +110,14 @@ if [[ ! -d "hosts/$HOST_NAME" ]]; then
     exit 1
 fi
 
+# Derive primary username from the host configuration (users.users.<name>)
+USER_NAME=$(grep -oP 'users\.users\.\K[a-zA-Z0-9_-]+(?=\s*=\s*\{)' "hosts/$HOST_NAME/default.nix" 2>/dev/null | head -1)
+if [[ -z "$USER_NAME" ]]; then
+    echo -e "${RED}Error:${NC} Could not detect primary user in hosts/$HOST_NAME/default.nix" >&2
+    echo "Define it as: users.users.<username> = { ... }" >&2
+    exit 1
+fi
+
 # ==============================================================================
 # MODE: REMOTE (nixos-anywhere)
 # ==============================================================================
@@ -419,6 +427,7 @@ echo -e "${RED}${BOLD}====================================================${NC}"
 echo -e "You are about to ${RED}${BOLD}COMPLETELY WIPE AND REPARTITION${NC}:"
 echo -e "  Disk:         ${YELLOW}${BOLD}$TARGET_DISK${NC} (${DISK_SIZE_GB} GB)"
 echo -e "  Host Config:  ${YELLOW}${BOLD}$HOST_NAME${NC}"
+echo -e "  Primary User: ${YELLOW}${BOLD}$USER_NAME${NC}"
 if [[ -n "$CACHE_SUBSTITUTERS" ]]; then
 echo -e "  Binary Cache: ${GREEN}${BOLD}$CACHE_PATH${NC} (${CYAN}${CACHE_NAR_COUNT}${NC} store paths)"
 else
@@ -516,17 +525,17 @@ nixos-install --flake ".#$HOST_NAME" --no-channel-copy "${CACHE_INSTALL_ARGS[@]}
 # 2.5 Post-Install System Configuration
 echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository..."
 
-# Copy configuration repository to /home/kryisnn/.config/config
-mkdir -p /mnt/home/kryisnn/.config/config
-cp -r . /mnt/home/kryisnn/.config/config/
-chown -R 1000:100 /mnt/home/kryisnn/.config/config
+# Copy configuration repository to /home/$USER_NAME/.config/config
+mkdir -p "/mnt/home/$USER_NAME/.config/config"
+cp -r . "/mnt/home/$USER_NAME/.config/config/"
+chown -R 1000:100 "/mnt/home/$USER_NAME/.config"
 mkdir -p /mnt/etc
-ln -sfn /home/kryisnn/.config/config /mnt/etc/nixos
-echo -e "  ${GREEN}✓ Configuration copied to /home/kryisnn/.config/config (linked to /etc/nixos)${NC}"
+ln -sfn "/home/$USER_NAME/.config/config" /mnt/etc/nixos
+echo -e "  ${GREEN}✓ Configuration copied to /home/$USER_NAME/.config/config (linked to /etc/nixos)${NC}"
 
-# Prompt to set password for primary user kryisnn (sudo access)
-echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}kryisnn${NC}:"
-nixos-enter --root /mnt -c "passwd kryisnn" || true
+# Prompt to set password for primary user (sudo access)
+echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}$USER_NAME${NC}:"
+nixos-enter --root /mnt -c "passwd $USER_NAME" || true
 
 # Cleanup temporary installation swap & files
 swapoff -a 2>/dev/null || true
@@ -540,7 +549,7 @@ echo -e "${BLUE}${BOLD}====================================================${NC}
 echo -e "${GREEN}${BOLD}   ✓ NixOS Server Successfully Installed!            ${NC}"
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "Next steps on first boot:"
-echo -e "  1. Log in as ${BOLD}kryisnn${NC}"
+echo -e "  1. Log in as ${BOLD}$USER_NAME${NC}"
 echo -e "  2. Run: ${CYAN}cd ~/.config/config && ./post-install.sh${NC}"
 echo -e "     (Sets up your 24/7 GitHub Deploy Key and Tailscale)"
 echo -e "${BLUE}${BOLD}====================================================${NC}"

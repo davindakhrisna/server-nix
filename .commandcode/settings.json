@@ -5,7 +5,9 @@
       "Shell(ssh -v -o ConnectTimeout=8 kryisnn@100.119.213.3 echo ok 2 >& 1)",
       "Shell(findstr:*)",
       "Shell(ssh-keygen -y -P \"\" -f \"C:\\Users\\kris\\.ssh\\id_ed25519\" >nul 2>&1 && echo NO-PASSPHRASE || echo HAS-PASSPHRASE-OR-ERROR)",
-      "Shell(ssh-keygen:*)"
+      "Shell(ssh-keygen:*)",
+      "Shell(bash -c \"grep -oP 'users\\\\.users\\\\.\\\\K[a-zA-Z0-9_-]+(?=\\\\s*=\\\\s*\\\\{)' 'hosts/homelab/default.nix' 'hosts/template/default.nix'\")",
+      "Shell(bash -c \"sed -n '176,200p' install.sh\")"
     ],
     "deny": [],
     "defaultMode": "default"
