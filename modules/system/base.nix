@@ -57,6 +57,10 @@
           limine = {
             enable = true;
             efiSupport = true;
+            # Install to \EFI\BOOT\BOOTX64.EFI instead of managing NVRAM boot
+            # entries - some laptop firmware rejects efibootmgr entry re-creation
+            # (exit status 8) during bootloader activation.
+            efiInstallAsRemovable = true;
             extraEntries = lib.optionalString config.var.dualBoot.enable ''
               /Windows 10
                   protocol: efi
