@@ -533,6 +533,22 @@ mkdir -p /mnt/etc
 ln -sfn "/home/$USER_NAME/.config/config" /mnt/etc/nixos
 echo -e "  ${GREEN}✓ Configuration copied to /home/$USER_NAME/.config/config (linked to /etc/nixos)${NC}"
 
+# 2.6 Generate service secrets (idempotent - never overwrites existing secrets)
+echo -e "\n${GREEN}==>${NC} Generating service secrets in /persist/secrets..."
+SECRETS_DIR=/mnt/persist/secrets
+mkdir -p "$SECRETS_DIR"
+gen_secret() { head -c 24 /dev/urandom | base64 | tr -d '/+=' | cut -c1-32; }
+[ -f "$SECRETS_DIR/openhands.env" ] || printf 'INITIAL_PASSWORD=%s\n' "$(gen_secret)" > "$SECRETS_DIR/openhands.env"
+[ -f "$SECRETS_DIR/headroom.env" ] || printf 'HEADROOM_PROXY_TOKEN=%s\n' "$(gen_secret)" > "$SECRETS_DIR/headroom.env"
+[ -f "$SECRETS_DIR/n8n.env" ] || printf 'N8N_ENCRYPTION_KEY=%s\n' "$(gen_secret)" > "$SECRETS_DIR/n8n.env"
+[ -f "$SECRETS_DIR/obsidian-sync-admin-password" ] || gen_secret > "$SECRETS_DIR/obsidian-sync-admin-password"
+chmod 600 "$SECRETS_DIR"/*
+echo -e "  ${GREEN}✓ Secrets written to /persist/secrets (mode 600)${NC}"
+echo -e "  ${YELLOW}Save these now - shown once, change after first login:${NC}"
+for f in "$SECRETS_DIR"/*; do
+    echo -e "    ${BOLD}$(basename "$f")${NC}: $(cat "$f")"
+done
+
 # Prompt to set password for primary user (sudo access)
 echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}$USER_NAME${NC}:"
 nixos-enter --root /mnt -c "passwd $USER_NAME" || true

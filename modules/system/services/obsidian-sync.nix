@@ -18,13 +18,16 @@
       adminUser = lib.mkOption {
         type = lib.types.str;
         default = "admin";
-        description = "Default admin user for CouchDB initialization";
+        description = "Admin user for CouchDB initialization";
       };
 
-      adminPassword = lib.mkOption {
-        type = lib.types.str;
-        default = "changeme_obsidian_sync";
-        description = "Admin password for CouchDB initialization (Change this!)";
+      adminPasswordFile = lib.mkOption {
+        type = lib.types.path;
+        default = "/persist/secrets/obsidian-sync-admin-password";
+        description = ''
+          File containing the CouchDB admin password (plain text, single line).
+          Read at runtime so the password never lands in git or the Nix store.
+        '';
       };
     };
 
@@ -33,7 +36,9 @@
         enable = true;
         bindAddress = "0.0.0.0";
         inherit (cfg) port adminUser;
-        adminPass = cfg.adminPassword;
+        # Admin credentials are injected at runtime via an ini fragment under
+        # /run so the password never enters the world-readable Nix store.
+        extraConfigFiles = ["/run/couchdb-admin/admin.ini"];
 
         # Optimized configuration for Obsidian LiveSync plugin requirements
         extraConfig = {
@@ -63,6 +68,17 @@
       };
 
       networking.firewall.allowedTCPPorts = [cfg.port];
+
+      systemd.services.couchdb = {
+        runtimeDirectory = "couchdb-admin";
+        preStart = lib.mkAfter ''
+          install -m 600 /dev/null /run/couchdb-admin/admin.ini
+          printf '[admins]\n"%s" = "%s"\n' \
+            "${cfg.adminUser}" \
+            "$(sed 's/\\/\\\\/g; s/"/\\"/g' ${toString cfg.adminPasswordFile})" \
+            > /run/couchdb-admin/admin.ini
+        '';
+      };
     };
   };
 }
