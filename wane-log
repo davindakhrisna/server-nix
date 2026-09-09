@@ -1424,3 +1424,7 @@
 [2026-09-09 21:51:55] [WARN] [init.scope] docker-nine-router.service: Start request repeated too quickly.
 [2026-09-09 21:51:55] [WARN] [init.scope] docker-nine-router.service: Failed with result 'start-limit-hit'.
 [2026-09-09 21:51:55] [ERROR] [init.scope] Failed to start docker-nine-router.service.
+[2026-09-09 22:07:46] [WARN] [init.scope] /etc/systemd/system/vulnix.service:10: Nice priority out of range, ignoring: 20
+[2026-09-09 22:07:47] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 22:07:48] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 22:07:49] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
