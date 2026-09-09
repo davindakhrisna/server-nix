@@ -70,7 +70,7 @@
       networking.firewall.allowedTCPPorts = [cfg.port];
 
       systemd.services.couchdb = {
-        runtimeDirectory = "couchdb-admin";
+        serviceConfig.RuntimeDirectory = "couchdb-admin";
         preStart = lib.mkAfter ''
           install -m 600 /dev/null /run/couchdb-admin/admin.ini
           printf '[admins]\n"%s" = "%s"\n' \
