@@ -46,11 +46,5 @@
         description = "Home Manager modules";
       };
 
-      options.flake.templates = lib.mkOption {
-        type = lib.types.lazyAttrsOf lib.types.unspecified;
-        default = {};
-        description = "Dev environment templates (nix flake init -t .#<name>)";
-      };
-
     });
 }
