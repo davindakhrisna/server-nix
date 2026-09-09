@@ -1428,3 +1428,4 @@
 [2026-09-09 22:07:47] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
 [2026-09-09 22:07:48] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
 [2026-09-09 22:07:49] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 22:08:16] [ERROR] [systemd-coredump@0-8193-150253_150254-0.service] null
