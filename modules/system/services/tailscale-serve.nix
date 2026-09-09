@@ -38,7 +38,7 @@
         # Reset first so removed routes disappear; re-apply everything declaratively.
         script =
           ''
-            tailscale serve --https=443 reset || true
+            tailscale serve reset || true
           ''
           + lib.concatStringsSep "\n" (lib.mapAttrsToList (
               path: port:
