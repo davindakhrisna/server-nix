@@ -42,7 +42,7 @@
           ''
           + lib.concatStringsSep "\n" (lib.mapAttrsToList (
               path: port:
-                "tailscale serve --bg --https=443 ${path} http://127.0.0.1:${toString port}"
+                "tailscale serve --bg --https=443 --set-path=${path} http://127.0.0.1:${toString port}"
             )
             cfg.routes)
           + "\ntailscale serve status";
