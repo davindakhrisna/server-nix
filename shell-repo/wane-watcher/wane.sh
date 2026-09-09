@@ -283,11 +283,16 @@ cmd_daemon() {
 
     # Continuous streaming loop from journald
     while $RUNNING; do
-        # Stream priorities 0 through 4 (emerg, alert, crit, err, warning) in real time
+        # Stream priorities 0 through 4 (emerg, alert, crit, err, warning) in real time.
+        # Append per-line instead of holding one open fd: if the log file is
+        # deleted or rotated out from under the daemon, writes would otherwise
+        # keep going into the unlinked inode forever.
         journalctl -f -p 0..4 -o json -n 0 2>/dev/null | jq --unbuffered -r '
             (if (.PRIORITY | tonumber) <= 3 then "ERROR" else "WARN" end) as $type |
             "[\((.__REALTIME_TIMESTAMP | tonumber / 1000000 | strftime("%Y-%m-%d %H:%M:%S")))] [\($type)] [\(._SYSTEMD_UNIT // .SYSLOG_IDENTIFIER // "system")] \(.MESSAGE)"
-        ' >> "$LOG_FILE" || true
+        ' | while IFS= read -r line; do
+            echo "$line" >> "$LOG_FILE"
+        done || true
 
         # Rotate if log exceeds MAX_LOG_SIZE_MB
         if [ -f "$LOG_FILE" ]; then
