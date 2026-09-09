@@ -1117,3 +1117,12 @@
 [2026-09-09 21:28:36] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
 [2026-09-09 21:28:36] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
 [2026-09-09 21:28:36] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:30:19] [ERROR] [session-7.scope] switching to system configuration /nix/store/v8l6gdpfpzi5qisn2knzjl5as2nc8a09-nixos-system-homelab-26.11.20260823.56c02bc failed (status 4)
+[2026-09-09 21:30:33] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:30:33] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:30:33] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:30:33] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:30:49] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 21:30:49] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 21:30:49] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 21:30:49] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
