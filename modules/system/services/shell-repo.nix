@@ -283,6 +283,8 @@
             wantedBy = ["multi-user.target"];
             after = ["network-online.target" "immich.service"];
             wants = ["network-online.target"];
+            # A real Immich API key must be supplied by the account owner.
+            # Missing credentials skip capture rather than causing a restart loop.
 
             path = with pkgs; [
               bash
@@ -320,7 +322,12 @@
                 SupplementaryGroups = ["video"];
                 WorkingDirectory = cfg.photoGallery.dataDir;
                 StateDirectory = "photo-gallery";
+                StateDirectoryMode = "0700";
+                UMask = "0077";
                 ExecStart = "${photoGalleryScript}/bin/photo-gallery --daemon";
+                ExecCondition = pkgs.writeShellScript "photo-gallery-ready" ''
+                  test -n "''${IMMICH_API_KEY:-}"
+                '';
                 Restart = "always";
                 RestartSec = "15s";
                 NoNewPrivileges = true;

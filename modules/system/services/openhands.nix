@@ -17,8 +17,8 @@
 
       image = lib.mkOption {
         type = lib.types.str;
-        default = "docker.openhands.dev/openhands/openhands:latest";
-        description = "Docker image for OpenHands";
+        default = "";
+        description = "Explicit OpenHands image pinned by @sha256 digest; required before enabling on an isolated host.";
       };
 
       workspaceDir = lib.mkOption {
@@ -35,7 +35,7 @@
 
       openFirewall = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Open port in firewall";
       };
 
@@ -53,6 +53,12 @@
     };
 
     config = lib.mkIf cfg.enable {
+      assertions = [
+        {
+          assertion = builtins.match ".+@sha256:[0-9a-f]{64}" cfg.image != null;
+          message = "Set homelab.openhands.image to a verified immutable digest before enabling it on an isolated host.";
+        }
+      ];
       systemd.tmpfiles.rules = [
         "d ${toString cfg.workspaceDir} 0775 root docker -"
         "d ${toString cfg.stateDir} 0775 root docker -"
@@ -64,7 +70,7 @@
           inherit (cfg) image;
           autoStart = true;
           ports = [
-            "${toString cfg.port}:3000"
+            "127.0.0.1:${toString cfg.port}:3000"
           ];
           volumes = [
             "/var/run/docker.sock:/var/run/docker.sock"

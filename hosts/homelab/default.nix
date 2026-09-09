@@ -49,24 +49,29 @@
 
         # Homelab Services Suite
         homelab = {
+          lowMemory = true;
+          backup = {
+            enable = true;
+            repository = "/persists/secret";
+            # A folder on the system disk does not protect against disk failure.
+            # Set requiredMount when using an external backup disk.
+          };
           ssh.enable = true;
           immich.enable = true;
           glance.enable = true;
 
-          # HTTPS via tailscale serve (needs MagicDNS + HTTPS certs enabled in
-          # the Tailscale admin console). Additive - plain http://homelab:<port>
-          # keeps working on the LAN.
+          # Each application gets a root URL on its own HTTPS port.
+          # Requires Tailscale login, MagicDNS and HTTPS certificates.
           tailscaleServe = {
             enable = true;
             routes = {
-              "/glance" = 8080;
-              "/n8n" = 5678;
-              "/immich" = 2283;
-              "/vaultwarden" = 8222;
-              "/obsidian" = 5984;
-              "/openhands" = 3000;
-              "/9router" = 20128;
-              "/headroom" = 8787;
+              "443" = 8080;
+              "8443" = 2283;
+              "8444" = 8222;
+              "8445" = 5678;
+              "8446" = 5984;
+              "8447" = 20128;
+              "8448" = 8787;
             };
           };
           vaultwarden = {
@@ -108,7 +113,8 @@
             environmentFile = "/persist/secrets/n8n.env";
           };
           openhands = {
-            enable = true;
+            # Keep AI execution off this host until a separate VM is available.
+            enable = false;
             environmentFile = "/persist/secrets/openhands.env";
           };
           nineRouter = {

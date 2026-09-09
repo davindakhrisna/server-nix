@@ -17,7 +17,7 @@
 
       image = lib.mkOption {
         type = lib.types.str;
-        default = "ghcr.io/headroomlabs-ai/headroom:latest";
+        default = "ghcr.io/headroomlabs-ai/headroom@sha256:35b799e94eef4644cb15a2e695b4b99698fe7668614623e9338cb10c10ececf9";
         description = "Docker image for Headroom";
       };
 
@@ -29,7 +29,7 @@
 
       openFirewall = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Open port in firewall";
       };
 
@@ -57,7 +57,7 @@
           inherit (cfg) image;
           autoStart = true;
           ports = [
-            "${toString cfg.port}:8787"
+            "127.0.0.1:${toString cfg.port}:8787"
           ];
           volumes = lib.optional (cfg.dataDir != null) "${toString cfg.dataDir}:/data";
           environment =

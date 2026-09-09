@@ -9,7 +9,7 @@ This guide covers installing and deploying the **NixOS Homelab Server** on bare-
 | Component | Minimum | Recommended | Notes |
 | :--- | :--- | :--- | :--- |
 | **Architecture** | `x86_64-linux` | `x86_64-linux` | Tested on Intel & AMD CPUs |
-| **RAM** | 2 GB | 8+ GB | Optimized installer activates swap immediately to prevent OOM |
+| **RAM** | Depends on enabled services | 8+ GB | Swap reduces memory pressure; the full suite is not guaranteed on 2–4 GB |
 | **Storage** | 32 GB | 256+ GB NVMe / SSD | Supports NVMe (`/dev/nvmeXn1`), SATA SSD/HDD (`/dev/sdX`), eMMC (`/dev/mmcblkX`), and VirtIO (`/dev/vdX`) |
 | **Network** | Wi-Fi or Ethernet | Gigabit Ethernet | Tailscale peer-to-peer mesh enabled |
 | **Form Factor** | Any | Old Laptop / Mini-PC | Lid switch ignore enabled for headless laptop operation |
@@ -78,7 +78,7 @@ The script will:
 3. Activate swap immediately and route `TMPDIR` to disk.
 4. Install NixOS to `/mnt`.
 5. Copy the configuration repository into `/mnt/home/<user>/.config/config` (the username is derived from the selected host's `users.users.<name>` definition) and symlink `/etc/nixos` to it.
-6. Generate random service secrets into `/mnt/persist/secrets/` (openhands, headroom, n8n, 9router, CouchDB admin) and print them once — save them.
+6. Provision missing service secrets into `/mnt/persist/secrets/` without displaying or overwriting them. Photo Gallery needs a real API key after creating your Immich account.
 7. Prompt you to enter a password for the primary user via `nixos-enter`.
 8. Prompt to reboot into your new installation.
 
@@ -97,6 +97,16 @@ From your local development machine:
 ```bash
 ./install.sh --mode remote --host homelab --target root@192.168.1.100 --disk /dev/sda
 ```
+
+Remote mode requires an explicit `--disk`; it does not select the first drive.
+The configuration workspace is copied through `--extra-files` and assigned to
+the primary user. Missing service secrets are provisioned on first boot.
+The remote user still needs a local password for ordinary sudo use; arrange
+console access or an explicit initial password configuration before installing.
+
+After either installation method, follow [Operations and migration](operations.md)
+to enable Tailscale HTTPS, enroll NAS accounts, supply the Immich API key and
+verify a backup restore. OpenHands is disabled on the main homelab host.
 
 `nixos-anywhere` will kexec into a NixOS in-memory installer, partition the remote disk, install NixOS, and reboot into your configured server.
 

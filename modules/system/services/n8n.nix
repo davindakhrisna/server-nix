@@ -17,14 +17,15 @@
 
       openFirewall = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Open port in firewall";
       };
 
       dataDir = lib.mkOption {
         type = lib.types.path;
         default = "/var/lib/n8n";
-        description = "Directory for n8n user workflows, credentials, and state";
+        readOnly = true;
+        description = "State directory fixed by the upstream n8n module";
       };
 
       webhookUrl = lib.mkOption {
@@ -53,6 +54,8 @@
         environment =
           {
             N8N_PORT = toString cfg.port;
+            N8N_LISTEN_ADDRESS = "127.0.0.1";
+            N8N_PROXY_HOPS = "1";
           }
           // lib.optionalAttrs (cfg.webhookUrl != null) {
             WEBHOOK_URL = cfg.webhookUrl;
@@ -61,7 +64,9 @@
       };
 
       systemd.services.n8n = lib.mkIf (cfg.environmentFile != null) {
-        serviceConfig.EnvironmentFile = cfg.environmentFile;
+        serviceConfig.EnvironmentFile =
+          [cfg.environmentFile]
+          ++ lib.optional config.homelab.tailscaleServe.enable "-/run/homelab-urls/n8n.env";
       };
     };
   };

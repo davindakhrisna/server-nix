@@ -17,7 +17,7 @@
 
       image = lib.mkOption {
         type = lib.types.str;
-        default = "decolua/9router:latest";
+        default = "decolua/9router@sha256:47c17576ad49f0918d1a455dd412ae4509ee8bc742f17ba0b3327ddc70f35a40";
         description = "Docker image for 9router";
       };
 
@@ -29,7 +29,7 @@
 
       openFirewall = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = false;
         description = "Open port in firewall";
       };
 
@@ -59,7 +59,7 @@
           inherit (cfg) image;
           autoStart = true;
           ports = [
-            "${toString cfg.port}:20128"
+            "127.0.0.1:${toString cfg.port}:20128"
           ];
           volumes = [
             "${toString cfg.dataDir}:/app/data"

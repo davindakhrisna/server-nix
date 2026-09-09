@@ -27,13 +27,13 @@
         enable = true;
         dbBackend = "sqlite";
         config = {
-          ROCKET_ADDRESS = "0.0.0.0";
+          ROCKET_ADDRESS = "127.0.0.1";
           ROCKET_PORT = cfg.port;
           SIGNUPS_ALLOWED = cfg.allowSignups;
         };
       };
-
-      networking.firewall.allowedTCPPorts = [cfg.port];
+      systemd.services.vaultwarden.serviceConfig.EnvironmentFile =
+        lib.mkAfter (lib.optional config.homelab.tailscaleServe.enable "-/run/homelab-urls/vaultwarden.env");
     };
   };
 }

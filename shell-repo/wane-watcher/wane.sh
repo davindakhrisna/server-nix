@@ -13,6 +13,7 @@ set -o pipefail
 # ------------------------------------------------------------------------------
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ENV_FILE="$DIR/.env"
+# shellcheck disable=SC1090
 [ -f "$ENV_FILE" ] && source "$ENV_FILE"
 
 DEFAULT_LOG_PATH="/var/log/wane/wane-log"
@@ -28,6 +29,24 @@ else
 fi
 
 MAX_LOG_SIZE_MB="${WANE_MAX_SIZE_MB:-50}"
+if [[ ! "$MAX_LOG_SIZE_MB" =~ ^[1-9][0-9]*$ ]]; then
+    echo 'WANE_MAX_SIZE_MB must be a positive integer.' >&2
+    exit 1
+fi
+
+# Check during the live stream, not after journalctl (which normally never exits).
+append_log_line() {
+    local line="$1" size max_bytes=$((MAX_LOG_SIZE_MB * 1024 * 1024))
+    local LC_ALL=C
+    line="${line:0:max_bytes/2}"
+    size=$(stat -c %s "$LOG_FILE" 2>/dev/null || echo 0)
+    if (( size + ${#line} + 1 > max_bytes )); then
+        tail -c "$((max_bytes / 2 - 1))" "$LOG_FILE" > "${LOG_FILE}.tmp" || return 1
+        chmod 0664 "${LOG_FILE}.tmp"
+        mv -f "${LOG_FILE}.tmp" "$LOG_FILE" || return 1
+    fi
+    printf '%s\n' "$line" >> "$LOG_FILE"
+}
 
 # Colors
 if [ -t 1 ]; then
@@ -37,11 +56,9 @@ if [ -t 1 ]; then
     BOLD_YELLOW='\033[1;33m'
     GREEN='\033[0;32m'
     BOLD_GREEN='\033[1;32m'
-    BLUE='\033[0;34m'
     BOLD_BLUE='\033[1;34m'
     CYAN='\033[0;36m'
     BOLD_CYAN='\033[1;36m'
-    MAGENTA='\033[0;35m'
     BOLD='\033[1m'
     DIM='\033[2m'
     NC='\033[0m' # No Color
@@ -52,11 +69,9 @@ else
     BOLD_YELLOW=''
     GREEN=''
     BOLD_GREEN=''
-    BLUE=''
     BOLD_BLUE=''
     CYAN=''
     BOLD_CYAN=''
-    MAGENTA=''
     BOLD=''
     DIM=''
     NC=''
@@ -278,7 +293,7 @@ cmd_daemon() {
         journalctl -b -p 0..4 -o json -n 25 --no-pager 2>/dev/null | jq --unbuffered -r '
             (if (.PRIORITY | tonumber) <= 3 then "ERROR" else "WARN" end) as $type |
             "[\((.__REALTIME_TIMESTAMP | tonumber / 1000000 | strftime("%Y-%m-%d %H:%M:%S")))] [\($type)] [\(._SYSTEMD_UNIT // .SYSLOG_IDENTIFIER // "system")] \(.MESSAGE)"
-        ' >> "$LOG_FILE" 2>/dev/null || true
+        ' | while IFS= read -r line; do append_log_line "$line"; done
     fi
 
     # Continuous streaming loop from journald
@@ -291,20 +306,8 @@ cmd_daemon() {
             (if (.PRIORITY | tonumber) <= 3 then "ERROR" else "WARN" end) as $type |
             "[\((.__REALTIME_TIMESTAMP | tonumber / 1000000 | strftime("%Y-%m-%d %H:%M:%S")))] [\($type)] [\(._SYSTEMD_UNIT // .SYSLOG_IDENTIFIER // "system")] \(.MESSAGE)"
         ' | while IFS= read -r line; do
-            echo "$line" >> "$LOG_FILE"
+            append_log_line "$line"
         done || true
-
-        # Rotate if log exceeds MAX_LOG_SIZE_MB
-        if [ -f "$LOG_FILE" ]; then
-            local current_size_kb
-            current_size_kb=$(du -k "$LOG_FILE" 2>/dev/null | cut -f1 || echo 0)
-            local max_size_kb=$((MAX_LOG_SIZE_MB * 1024))
-            if [ "$current_size_kb" -gt "$max_size_kb" ]; then
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Log size ($current_size_kb KB) exceeded $MAX_LOG_SIZE_MB MB. Rotating..."
-                tail -n 10000 "$LOG_FILE" > "${LOG_FILE}.tmp" && mv "${LOG_FILE}.tmp" "$LOG_FILE"
-                chmod 664 "$LOG_FILE" 2>/dev/null || true
-            fi
-        fi
 
         sleep 2
     done
@@ -352,6 +355,7 @@ usage() {
 # ------------------------------------------------------------------------------
 # Dispatcher
 # ------------------------------------------------------------------------------
+[[ "${BASH_SOURCE[0]}" != "$0" ]] && return 0
 case "${1:-}" in
     --clear|-c|clear)
         cmd_clear

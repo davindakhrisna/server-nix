@@ -34,7 +34,7 @@
     config = lib.mkIf cfg.enable {
       services.couchdb = {
         enable = true;
-        bindAddress = "0.0.0.0";
+        bindAddress = "127.0.0.1";
         inherit (cfg) port adminUser;
         # Admin credentials are injected at runtime via an ini fragment under
         # /run so the password never enters the world-readable Nix store.
@@ -67,15 +67,17 @@
         };
       };
 
-      networking.firewall.allowedTCPPorts = [cfg.port];
-
       systemd.services.couchdb = {
         serviceConfig.RuntimeDirectory = "couchdb-admin";
+        serviceConfig.RuntimeDirectoryMode = "0700";
+        serviceConfig.LoadCredential = ["admin-password:${toString cfg.adminPasswordFile}"];
         preStart = lib.mkAfter ''
           install -m 600 /dev/null /run/couchdb-admin/admin.ini
-          printf '[admins]\n"%s" = "%s"\n' \
-            "${cfg.adminUser}" \
-            "$(sed 's/\\/\\\\/g; s/"/\\"/g' ${toString cfg.adminPasswordFile})" \
+          password=$(cat "$CREDENTIALS_DIRECTORY/admin-password")
+          test -n "$password"
+          printf '[admins]\n%s = %s\n' \
+            ${lib.escapeShellArg cfg.adminUser} \
+            "$password" \
             > /run/couchdb-admin/admin.ini
         '';
       };

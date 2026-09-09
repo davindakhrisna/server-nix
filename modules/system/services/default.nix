@@ -13,6 +13,8 @@
       services-nine-router
       services-headroom
       services-tailscale-serve
+      services-secrets
+      services-backup
     ];
   };
 }

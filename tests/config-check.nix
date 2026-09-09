@@ -1,0 +1,26 @@
+config: let
+  c = config;
+  backendPorts = [8080 2283 8222 5678 5984 20128 8787 3000];
+in
+  assert !c.homelab.openhands.enable;
+  assert !(builtins.hasAttr "openhands" c.virtualisation.oci-containers.containers);
+  assert !(builtins.elem "docker" (c.systemd.services.glance.serviceConfig.SupplementaryGroups or []));
+  assert c.services.immich.host == "127.0.0.1";
+  assert c.services.couchdb.bindAddress == "127.0.0.1";
+  assert c.services.vaultwarden.config.ROCKET_ADDRESS == "127.0.0.1";
+  assert c.services.n8n.environment.N8N_LISTEN_ADDRESS == "127.0.0.1";
+  assert builtins.all (port: !(builtins.elem port c.networking.firewall.allowedTCPPorts)) backendPorts;
+  assert builtins.all (
+    container:
+      builtins.match ".+@sha256:[0-9a-f]{64}" container.image
+      != null
+      && builtins.all (port: builtins.match "127.0.0.1:.*" port != null) container.ports
+  ) (builtins.attrValues c.virtualisation.oci-containers.containers);
+  assert c.services.samba.settings.nas."guest ok" == "no";
+  assert c.services.samba.settings.nas."path" == "/srv/nas";
+  assert c.homelab.tailscaleServe.routes."8443" == 2283;
+  assert c.services.restic.backups.homelab.initialize;
+  assert c.services.restic.backups.homelab.runCheck;
+  assert !c.services.immich.machine-learning.enable;
+  assert c.homelab.shellRepo.autoVc.enable;
+  assert c.homelab.shellRepo.autoVc.intervalSeconds == 60; true

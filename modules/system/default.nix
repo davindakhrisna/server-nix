@@ -4,6 +4,7 @@
       base
       hardware
       utils
+      resources
       services
     ];
   };

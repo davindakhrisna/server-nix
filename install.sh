@@ -93,6 +93,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+case "$MODE" in
+    local|remote) ;;
+    *) echo "Invalid installation mode: $MODE" >&2; exit 1 ;;
+esac
+
 # Ensure we're in the repository root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -106,7 +111,7 @@ echo ""
 if [[ ! -d "hosts/$HOST_NAME" ]]; then
     echo -e "${RED}Error:${NC} Host configuration 'hosts/$HOST_NAME' not found!" >&2
     echo "Available hosts:"
-    ls -1 hosts | sed 's/^/  - /'
+    printf '  - %s\n' hosts/*/
     exit 1
 fi
 
@@ -131,15 +136,11 @@ if [[ "$MODE" == "remote" ]]; then
     echo -e "${YELLOW}Target:${NC} $REMOTE_TARGET"
     echo -e "${YELLOW}Host Configuration:${NC} $HOST_NAME"
 
-    # Auto-detect remote disk if not provided
+    # Remote disk selection must be explicit; the first disk is not necessarily safe.
     DISKO_FILE="hosts/$HOST_NAME/_disko.nix"
     if [[ -z "$TARGET_DISK" ]]; then
-        REMOTE_DETECTED_DISK=$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$REMOTE_TARGET" \
-            "lsblk -dpno NAME,TYPE 2>/dev/null | awk '\$2==\"disk\" {print \$1; exit}'" 2>/dev/null || true)
-        if [[ -n "$REMOTE_DETECTED_DISK" ]]; then
-            TARGET_DISK="$REMOTE_DETECTED_DISK"
-            echo -e "  ${GREEN}==>${NC} Auto-detected remote primary disk: ${BOLD}$TARGET_DISK${NC}"
-        fi
+        echo 'Remote installation requires --disk with an explicitly selected device.' >&2
+        exit 1
     fi
 
     # Update disk device in hosts/$HOST_NAME/_disko.nix
@@ -181,8 +182,18 @@ if [[ "$MODE" == "remote" ]]; then
     fi
 
     echo -e "\n${GREEN}==>${NC} Running nixos-anywhere..."
+    # Supply the same configuration workspace as a local installation.
+    # Credentials are provisioned by homelab-secrets on the first boot.
+    REMOTE_FILES=$(mktemp -d)
+    trap 'rm -rf -- "$REMOTE_FILES"' EXIT
+    mkdir -p "$REMOTE_FILES/home/$USER_NAME/.config/config"
+    cp -r . "$REMOTE_FILES/home/$USER_NAME/.config/config/"
+    nix --extra-experimental-features "nix-command flakes" eval --raw \
+        ".#nixosConfigurations.$HOST_NAME.config.system.build.toplevel.drvPath" >/dev/null
     nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- \
         --flake ".#$HOST_NAME" \
+        --extra-files "$REMOTE_FILES" \
+        --chown "/home/$USER_NAME/.config" 1000:100 \
         "$REMOTE_TARGET"
 
     echo -e "\n${GREEN}${BOLD}✓ Remote installation completed successfully!${NC}"
@@ -533,21 +544,10 @@ mkdir -p /mnt/etc
 ln -sfn "/home/$USER_NAME/.config/config" /mnt/etc/nixos
 echo -e "  ${GREEN}✓ Configuration copied to /home/$USER_NAME/.config/config (linked to /etc/nixos)${NC}"
 
-# 2.6 Generate service secrets (idempotent - never overwrites existing secrets)
+# 2.6 Generate missing service secrets without displaying credentials.
 echo -e "\n${GREEN}==>${NC} Generating service secrets in /persist/secrets..."
-SECRETS_DIR=/mnt/persist/secrets
-mkdir -p "$SECRETS_DIR"
-gen_secret() { head -c 24 /dev/urandom | base64 | tr -d '/+=' | cut -c1-32; }
-[ -f "$SECRETS_DIR/openhands.env" ] || printf 'INITIAL_PASSWORD=%s\n' "$(gen_secret)" > "$SECRETS_DIR/openhands.env"
-[ -f "$SECRETS_DIR/headroom.env" ] || printf 'HEADROOM_PROXY_TOKEN=%s\n' "$(gen_secret)" > "$SECRETS_DIR/headroom.env"
-[ -f "$SECRETS_DIR/n8n.env" ] || printf 'N8N_ENCRYPTION_KEY=%s\n' "$(gen_secret)" > "$SECRETS_DIR/n8n.env"
-[ -f "$SECRETS_DIR/obsidian-sync-admin-password" ] || gen_secret > "$SECRETS_DIR/obsidian-sync-admin-password"
-chmod 600 "$SECRETS_DIR"/*
-echo -e "  ${GREEN}✓ Secrets written to /persist/secrets (mode 600)${NC}"
-echo -e "  ${YELLOW}Save these now - shown once, change after first login:${NC}"
-for f in "$SECRETS_DIR"/*; do
-    echo -e "    ${BOLD}$(basename "$f")${NC}: $(cat "$f")"
-done
+bash "$SCRIPT_DIR/scripts/provision-secrets.sh" /mnt/persist/secrets
+echo 'Credentials are stored in /persist/secrets. Add your Immich API key to photo-gallery.env after first login.'
 
 # Prompt to set password for primary user (sudo access)
 echo -e "\n${GREEN}==>${NC} Set login & sudo password for primary user ${BOLD}$USER_NAME${NC}:"

@@ -14,12 +14,18 @@
         default = "/srv/nas";
         description = "Path to the shared NAS storage pool";
       };
+
+      users = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = lib.attrNames (lib.filterAttrs (_: user: user.isNormalUser) config.users.users);
+        description = "Local accounts allowed to use the NAS; set their Samba passwords with smbpasswd -a.";
+      };
     };
 
     config = lib.mkIf cfg.enable {
-      # Ensure the shared storage directory exists with open local permissions
+      users.groups.nas.members = cfg.users;
       systemd.tmpfiles.rules = [
-        "d ${cfg.sharesPath} 0777 root root -"
+        "d ${cfg.sharesPath} 2770 root nas -"
       ];
 
       # Samba file sharing & Network Discovery
@@ -34,18 +40,22 @@
               "netbios name" = "HOMELAB";
               "security" = "user";
               # Only allow private LAN subnets and Tailscale (100.x.y.z)
-              "hosts allow" = "192.168. 10. 172.16. 100. 127.0.0.1 localhost";
+              "hosts allow" = "192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 100.64.0.0/10 127.0.0.1 ::1";
               "hosts deny" = "0.0.0.0/0";
-              "guest account" = "nobody";
-              "map to guest" = "bad user";
+              "map to guest" = "never";
+              "server min protocol" = "SMB2_10";
             };
             nas = {
               "path" = cfg.sharesPath;
               "browseable" = "yes";
               "read only" = "no";
-              "guest ok" = "yes";
-              "create mask" = "0664";
-              "directory mask" = "0775";
+              "guest ok" = "no";
+              "valid users" = lib.concatStringsSep " " cfg.users;
+              "force group" = "nas";
+              "create mask" = "0660";
+              "force create mode" = "0660";
+              "directory mask" = "2770";
+              "force directory mode" = "2770";
               "comment" = "Homelab Shared Storage";
             };
           };

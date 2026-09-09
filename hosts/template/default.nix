@@ -53,6 +53,15 @@
           ssh.enable = true;
           immich.enable = true;
           glance.enable = true;
+          tailscaleServe = {
+            enable = true;
+            routes = {
+              "443" = 8080;
+              "8443" = 2283;
+              "8444" = 8222;
+              "8446" = 5984;
+            };
+          };
           vaultwarden.enable = true;
           obsidianSync.enable = true;
           nas.enable = true;

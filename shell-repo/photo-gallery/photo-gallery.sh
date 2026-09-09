@@ -55,7 +55,8 @@ fi
 # Logging
 # ------------------------------------------------------------------------------
 log() {
-    local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    local msg
+    msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
     echo "$msg"
     if [ -n "$LOG_FILE" ]; then
         mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
@@ -78,6 +79,7 @@ check_dependencies() {
     local missing=()
     command -v curl >/dev/null 2>&1 || missing+=("curl")
     command -v jq >/dev/null 2>&1 || missing+=("jq")
+    command -v flock >/dev/null 2>&1 || missing+=("flock (util-linux)")
 
     case "$CAMERA_TYPE" in
         usb|rtsp)
@@ -211,7 +213,7 @@ immich_test_connection() {
     log "Checking Immich server connectivity at: $api_base"
 
     local response
-    response=$(curl -s -w "\n%{http_code}" -X GET "${api_base}/users/me" \
+    response=$(curl --connect-timeout 10 --max-time 60 -s -w "\n%{http_code}" -X GET "${api_base}/users/me" \
         -H "x-api-key: ${IMMICH_API_KEY}" \
         -H "Accept: application/json")
 
@@ -250,7 +252,7 @@ immich_get_or_create_album() {
 
     # 1. Search for existing album
     local albums_json
-    albums_json=$(curl -s -f -X GET "${api_base}/albums" \
+    albums_json=$(curl --connect-timeout 10 --max-time 60 -s -f -X GET "${api_base}/albums" \
         -H "x-api-key: ${IMMICH_API_KEY}" \
         -H "Accept: application/json" 2>/dev/null)
 
@@ -265,7 +267,7 @@ immich_get_or_create_album() {
     fi
 
     # 2. Create album if missing
-    log "Album '$IMMICH_ALBUM_NAME' not found. Creating album..."
+    log "Album '$IMMICH_ALBUM_NAME' not found. Creating album..." >&2
     local payload
     payload=$(jq -n \
         --arg name "$IMMICH_ALBUM_NAME" \
@@ -273,7 +275,7 @@ immich_get_or_create_album() {
         '{"albumName": $name, "description": $desc}')
 
     local create_resp
-    create_resp=$(curl -s -f -X POST "${api_base}/albums" \
+    create_resp=$(curl --connect-timeout 10 --max-time 60 -s -f -X POST "${api_base}/albums" \
         -H "x-api-key: ${IMMICH_API_KEY}" \
         -H "Content-Type: application/json" \
         -H "Accept: application/json" \
@@ -281,7 +283,7 @@ immich_get_or_create_album() {
 
     album_id=$(echo "$create_resp" | jq -r '.id // empty' 2>/dev/null)
     if [ -n "$album_id" ] && [ "$album_id" != "null" ]; then
-        log "Album created successfully (ID: $album_id)."
+        log "Album created successfully (ID: $album_id)." >&2
         echo "$album_id"
         return 0
     fi
@@ -300,16 +302,16 @@ immich_upload_and_index() {
 
     local api_base
     api_base=$(get_api_base)
-    local timestamp_sec
-    timestamp_sec=$(date +%s)
-    local device_asset_id="${IMMICH_DEVICE_ID}-${timestamp_sec}-${RANDOM}"
+    # Stable across retries, including a crash after the server accepted the upload.
+    local device_asset_id
+    device_asset_id="${IMMICH_DEVICE_ID}-$(basename "$file_path")"
     local iso_date
-    iso_date=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+    iso_date=$(date -u -r "$file_path" +"%Y-%m-%dT%H:%M:%S.000Z")
 
     log "Uploading photo to Immich ($(basename "$file_path"))..."
 
     local upload_resp
-    upload_resp=$(curl -s -w "\n%{http_code}" -X POST "${api_base}/assets" \
+    upload_resp=$(curl --connect-timeout 10 --max-time 300 -s -w "\n%{http_code}" -X POST "${api_base}/assets" \
         -H "x-api-key: ${IMMICH_API_KEY}" \
         -H "Accept: application/json" \
         -F "assetData=@${file_path}" \
@@ -356,7 +358,7 @@ immich_upload_and_index() {
         add_payload=$(jq -n --arg id "$asset_id" '{"ids": [$id]}')
 
         local put_resp
-        put_resp=$(curl -s -w "\n%{http_code}" -X PUT "${api_base}/albums/${album_id}/assets" \
+        put_resp=$(curl --connect-timeout 10 --max-time 60 -s -w "\n%{http_code}" -X PUT "${api_base}/albums/${album_id}/assets" \
             -H "x-api-key: ${IMMICH_API_KEY}" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
@@ -368,9 +370,11 @@ immich_upload_and_index() {
             log "Photo successfully added to Life Museum album."
         else
             log_warn "Asset uploaded, but adding to album returned HTTP $put_code"
+            return 1
         fi
     else
         log_warn "Asset uploaded, but target album could not be retrieved."
+        return 1
     fi
 
     return 0
@@ -383,9 +387,32 @@ cleanup_local_storage() {
     if [ "$KEEP_LOCAL_DAYS" -gt 0 ] 2>/dev/null; then
         if [ -d "$STORAGE_DIR" ]; then
             log "Running local cleanup: removing snapshots older than $KEEP_LOCAL_DAYS days..."
-            find "$STORAGE_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) -mtime +"$KEEP_LOCAL_DAYS" -exec rm -f {} + 2>/dev/null
+            while IFS= read -r -d '' file; do
+                # Unacknowledged uploads are never expired.
+                if [[ -f "$file.uploaded" ]]; then
+                    rm -f -- "$file" "$file.uploaded"
+                fi
+            done < <(find "$STORAGE_DIR" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) -mtime +"$KEEP_LOCAL_DAYS" -print0)
         fi
     fi
+}
+
+with_storage_lock() (
+    mkdir -p "$STORAGE_DIR"
+    exec 9>"$STORAGE_DIR/.upload.lock"
+    flock -n 9 || return 0
+    "$@"
+)
+
+retry_pending_uploads() {
+    local file
+    while IFS= read -r -d '' file; do
+        [[ -f "$file.uploaded" ]] && continue
+        # Stop at the first failure to avoid hammering an unavailable server.
+        immich_upload_and_index "$file" || return 1
+        touch "$file.uploaded" || return 1
+    done < <(find "$STORAGE_DIR" -type f \( -name '*.jpg' -o -name '*.jpeg' -o -name '*.png' \) -print0)
+    cleanup_local_storage
 }
 
 # ------------------------------------------------------------------------------
@@ -395,8 +422,9 @@ run_capture_and_upload() {
     check_dependencies || return 1
     check_env || return 1
 
+    retry_pending_uploads || log_warn "Previous captures remain queued for upload."
     local timestamp
-    timestamp=$(date '+%Y%m%d_%H%M%S')
+    timestamp=$(date '+%Y%m%d_%H%M%S_%N')
     local dest_file="$STORAGE_DIR/life_museum_${timestamp}.jpg"
 
     if ! capture_photo "$dest_file"; then
@@ -404,15 +432,16 @@ run_capture_and_upload() {
         return 1
     fi
 
-    if ! immich_upload_and_index "$dest_file"; then
-        log_error "Photo captured at $dest_file, but failed to sync to Immich."
-        return 1
-    fi
-
-    # Record state for daily scheduler
+    # A failed upload must not trigger repeated daily captures.
     local today
     today=$(date '+%Y-%m-%d')
     echo "$today" > "$STATE_FILE"
+
+    if ! immich_upload_and_index "$dest_file"; then
+        log_error "Photo saved at $dest_file; it will be retried without expiring."
+        return 1
+    fi
+    touch "$dest_file.uploaded" || return 1
 
     cleanup_local_storage
     log "Capture and sync workflow completed successfully."
@@ -545,6 +574,7 @@ run_daemon() {
 
     check_dependencies || exit 1
     check_env || exit 1
+    mkdir -p "$STORAGE_DIR"
 
     # Verify connection on daemon startup
     if ! immich_test_connection; then
@@ -559,11 +589,17 @@ run_daemon() {
         sleep_seconds=$(get_next_sleep_seconds)
 
         log "Entering sleep until next capture window..."
-        sleep "$sleep_seconds" &
-        wait $!
+        # Retry pending files every five minutes, even outside capture hours.
+        while (( sleep_seconds > 0 )); do
+            local chunk=$((sleep_seconds < 300 ? sleep_seconds : 300))
+            sleep "$chunk" &
+            wait $!
+            sleep_seconds=$((sleep_seconds - chunk))
+            with_storage_lock retry_pending_uploads || true
+        done
 
         log "Waking up to perform scheduled capture..."
-        if ! run_capture_and_upload; then
+        if ! with_storage_lock run_capture_and_upload; then
             log_error "Scheduled capture encountered an error. Will continue running 24/7."
             # Sleep brief backoff to avoid tight retry loops on camera failure
             sleep 60
@@ -665,12 +701,13 @@ EOF
 # ------------------------------------------------------------------------------
 # Main Dispatch
 # ------------------------------------------------------------------------------
-case "$1" in
+[[ "${BASH_SOURCE[0]}" != "$0" ]] && return 0
+case "${1:-}" in
     --daemon|-d)
         run_daemon
         ;;
     --now|-n|"")
-        run_capture_and_upload
+        with_storage_lock run_capture_and_upload
         ;;
     --test-camera|-tc)
         test_camera_only

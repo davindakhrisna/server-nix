@@ -5,6 +5,14 @@
     ...
   }: let
     cfg = config.homelab.glance;
+    publicUrl = backend: let
+      port =
+        lib.findFirst (port: config.homelab.tailscaleServe.routes.${port} == backend) null
+        (builtins.attrNames config.homelab.tailscaleServe.routes);
+    in
+      if port == null
+      then "http://127.0.0.1:${toString backend}"
+      else "https://\${HOMELAB_HOST}:${port}";
   in {
     options.homelab.glance = {
       enable = lib.mkEnableOption "Glance homelab feeds and services dashboard";
@@ -22,7 +30,7 @@
         settings = {
           server = {
             inherit (cfg) port;
-            host = "0.0.0.0";
+            host = "127.0.0.1";
           };
           theme = {
             background-color = "0 0 0";
@@ -50,15 +58,15 @@
                           links = [
                             {
                               title = "Immich Photos";
-                              url = "http://homelab:2283";
+                              url = publicUrl 2283;
                             }
                             {
                               title = "Vaultwarden";
-                              url = "http://homelab:8222";
+                              url = publicUrl 8222;
                             }
                             {
                               title = "Obsidian CouchDB";
-                              url = "http://homelab:5984/_utils";
+                              url = "${publicUrl 5984}/_utils";
                             }
                           ];
                         }
@@ -67,19 +75,15 @@
                           links = [
                             {
                               title = "n8n Workflows";
-                              url = "http://homelab:5678";
-                            }
-                            {
-                              title = "OpenHands";
-                              url = "http://homelab:3000";
+                              url = publicUrl 5678;
                             }
                             {
                               title = "9Router";
-                              url = "http://homelab:20128";
+                              url = publicUrl 20128;
                             }
                             {
                               title = "Headroom";
-                              url = "http://homelab:8787";
+                              url = publicUrl 8787;
                             }
                           ];
                         }
@@ -111,10 +115,6 @@
                           url = "http://127.0.0.1:5984";
                         }
                         {
-                          title = "OpenHands";
-                          url = "http://127.0.0.1:3000";
-                        }
-                        {
                           title = "9Router";
                           url = "http://127.0.0.1:20128";
                         }
@@ -123,9 +123,6 @@
                           url = "http://127.0.0.1:8787/health";
                         }
                       ];
-                    }
-                    {
-                      type = "docker-containers";
                     }
                     {
                       type = "server-stats";
@@ -161,10 +158,10 @@
         };
       };
 
-      # docker-containers widget reads /var/run/docker.sock
-      systemd.services.glance.serviceConfig.SupplementaryGroups = ["docker"];
-
-      networking.firewall.allowedTCPPorts = [cfg.port];
+      systemd.services.glance = {
+        environment.HOMELAB_HOST = "localhost";
+        serviceConfig.EnvironmentFile = lib.mkForce "-/run/homelab-urls/glance.env";
+      };
     };
   };
 }

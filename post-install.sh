@@ -123,6 +123,21 @@ fi
 # Summary
 # ------------------------------------------------------------------------------
 echo ""
+echo 'Setting up service credentials and authenticated NAS access...'
+sudo systemctl start homelab-secrets.service
+if systemctl is-active --quiet samba-smbd.service; then
+    echo "Set the Samba password for $USER (used to connect to the NAS):"
+    sudo smbpasswd -a "$USER"
+fi
+if command -v tailscale >/dev/null 2>&1 && tailscale status >/dev/null 2>&1; then
+    sudo systemctl restart tailscale-serve.service
+    tailscale serve status
+fi
+echo 'Add your Immich API key to /persist/secrets/photo-gallery.env, then restart photo-gallery.'
+echo 'Keep a separate copy of /persist/secrets/restic-password; the backup cannot be recovered without it.'
+echo 'See docs/operations.md for migration, backups and restore verification.'
+
+echo ""
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "${GREEN}${BOLD}   ✓ Post-Installation Setup Complete!              ${NC}"
 echo -e "${BLUE}${BOLD}====================================================${NC}"
