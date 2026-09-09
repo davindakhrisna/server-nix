@@ -48,7 +48,9 @@
 
     config = lib.mkIf cfg.enable {
       systemd.tmpfiles.rules = [
-        "d ${toString cfg.dataDir} 0750 root root -"
+        # 9router image runs as uid 1000 (node) and writes jwt-secret,
+        # model catalogs, etc. into the data dir
+        "d ${toString cfg.dataDir} 0750 1000 1000 -"
       ];
 
       virtualisation.oci-containers = {
