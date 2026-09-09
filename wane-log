@@ -1366,3 +1366,12 @@
 [2026-09-09 21:46:04] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
 [2026-09-09 21:46:04] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
 [2026-09-09 21:46:04] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service] [2026/09/10 04:48:36.194310,  0] ../../source3/winbindd/winbindd_dual.c:2013(winbindd_sig_term_handler)
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service] [2026/09/10 04:48:36.325766,  0, traceid=1] ../../source3/winbindd/winbindd_dual.c:2013(winbindd_sig_term_handler)
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service]   Got sig[15] terminate (is_parent=0)
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service]   Got sig[15] terminate (is_parent=1)
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service] [2026/09/10 04:48:36.207644,  0] ../../source3/winbindd/winbindd_dual.c:2013(winbindd_sig_term_handler)
+[2026-09-09 21:48:36] [ERROR] [samba-winbindd.service]   Got sig[15] terminate (is_parent=0)
+[2026-09-09 21:49:16] [WARN] [systemd-udevd.service] vethc54e943: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/vethc54e943/use_tempaddr'' failed with exit code 1.
+[2026-09-09 21:49:16] [WARN] [systemd-udevd.service] veth996f5dc: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/veth996f5dc/use_tempaddr'' failed with exit code 1.
+[2026-09-09 21:49:16] [WARN] [systemd-udevd.service] veth878b128: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/veth878b128/use_tempaddr'' failed with exit code 1.
