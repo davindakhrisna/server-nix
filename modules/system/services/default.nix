@@ -12,6 +12,7 @@
       services-openhands
       services-nine-router
       services-headroom
+      services-tailscale-serve
     ];
   };
 }
