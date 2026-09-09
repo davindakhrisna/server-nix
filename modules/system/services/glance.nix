@@ -33,7 +33,7 @@
               name = "Home";
               columns = [
                 {
-                  size = "small";
+                  size = "full";
                   widgets = [
                     {
                       type = "clock";
