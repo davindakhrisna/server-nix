@@ -1375,3 +1375,19 @@
 [2026-09-09 21:49:16] [WARN] [systemd-udevd.service] vethc54e943: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/vethc54e943/use_tempaddr'' failed with exit code 1.
 [2026-09-09 21:49:16] [WARN] [systemd-udevd.service] veth996f5dc: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/veth996f5dc/use_tempaddr'' failed with exit code 1.
 [2026-09-09 21:49:16] [WARN] [systemd-udevd.service] veth878b128: Process '/nix/store/90nk33c4fkyg4x4dfk5cykqiryf2nlqq-bash-interactive-5.3p15/bin/sh -c 'echo 2 > /proc/sys/net/ipv6/conf/veth878b128/use_tempaddr'' failed with exit code 1.
+[2026-09-09 21:49:35] [WARN] [init.scope] docker-openhands.service: Failed with result 'exit-code'.
+[2026-09-09 21:49:36] [WARN] [init.scope] docker-nine-router.service: Failed with result 'exit-code'.
+[2026-09-09 21:49:37] [WARN] [init.scope] docker-headroom.service: Failed with result 'exit-code'.
+[2026-09-09 21:50:05] [WARN] [init.scope] n8n.service: State 'stop-sigterm' timed out. Killing.
+[2026-09-09 21:50:05] [WARN] [init.scope] n8n.service: Main process exited, code=killed, status=9/KILL
+[2026-09-09 21:50:05] [WARN] [init.scope] n8n.service: Failed with result 'timeout'.
+[2026-09-09 21:50:06] [WARN] [init.scope] /etc/systemd/system/vulnix.service:10: Nice priority out of range, ignoring: 20
+[2026-09-09 21:50:07] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 21:50:08] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 21:50:08] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'fi.w1.wpa_supplicant1' in service file '/nix/store/c6fn8v8sp4i7jmkpp7na5sb63nxmm18c-wpa_supplicant-2.11/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service'
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.nm_dispatcher' in service file '/nix/store/smg6s5kfg2m8nbcq6kq8bsdbqbh7naw9-networkmanager-1.58.0/share/dbus-1/system-services/org.freedesktop.nm_dispatcher.service'
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.nm_priv_helper' in service file '/nix/store/smg6s5kfg2m8nbcq6kq8bsdbqbh7naw9-networkmanager-1.58.0/share/dbus-1/system-services/org.freedesktop.nm_priv_helper.service'
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.ModemManager1' in service file '/nix/store/nasw2v3yzqxbcz7633zjygg42hdv0i2f-modemmanager-1.24.2/share/dbus-1/system-services/org.freedesktop.ModemManager1.service'
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.UDisks2' in service file '/nix/store/fny6q89v8gmqhdvr29jsa0ysjlrpc0p2-udisks-2.11.2/share/dbus-1/system-services/org.freedesktop.UDisks2.service'
+[2026-09-09 21:50:09] [ERROR] [dbus-broker.service] Ignoring duplicate name 'org.freedesktop.PolicyKit1' in service file '/nix/store/g2idqgjmv239g4g7bzs9p8ir6np5yr7m-polkit-127/share/dbus-1/system-services/org.freedesktop.PolicyKit1.service'
