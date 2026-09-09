@@ -41,3 +41,19 @@
 [2026-09-09 20:19:42] [WARN] [init.scope] tailscale-serve.service: Failed with result 'exit-code'.
 [2026-09-09 20:19:42] [ERROR] [init.scope] Failed to start Tailscale Serve - declarative HTTPS routes.
 [2026-09-09 20:19:42] [ERROR] [session-7.scope] switching to system configuration /nix/store/wa5gak2cqvw5yib2zz1xca3mvr52iich-nixos-system-homelab-26.11.20260823.56c02bc failed (status 4)
+[2026-09-09 20:19:56] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 20:19:56] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 20:19:56] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 20:19:56] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 20:20:11] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 20:20:11] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 20:20:11] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 20:20:11] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 20:20:27] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 20:20:27] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 20:20:27] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 20:20:27] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
+[2026-09-09 20:20:42] [ERROR] [init.scope] photo-gallery.service: Failed to load environment files: No such file or directory
+[2026-09-09 20:20:42] [WARN] [init.scope] photo-gallery.service: Failed to spawn 'start' task: No such file or directory
+[2026-09-09 20:20:42] [WARN] [init.scope] photo-gallery.service: Failed with result 'resources'.
+[2026-09-09 20:20:42] [ERROR] [init.scope] Failed to start Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync.
