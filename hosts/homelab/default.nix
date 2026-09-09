@@ -94,7 +94,11 @@
             enable = true;
             environmentFile = "/persist/secrets/openhands.env";
           };
-          nineRouter.enable = true;
+          nineRouter = {
+            enable = true;
+            # 9router login password (default is 123456 - see its docs)
+            environmentFile = "/persist/secrets/nine-router.env";
+          };
           headroom = {
             enable = true;
             # Auth token for the /v1/* proxy routes (open port otherwise)
