@@ -18,6 +18,30 @@
     waneScript = pkgs.writeShellScriptBin "wane" (
       builtins.readFile ../../../shell-repo/wane-watcher/wane.sh
     );
+
+    # Primary user = the normal (human) user with the lowest uid, i.e. the
+    # first account created. Hosts with several users should set the user
+    # options explicitly.
+    primaryUser = let
+      users = lib.filterAttrs (_: u: u.isNormalUser) config.users.users;
+      sorted = lib.sort (a: b: (users.${a}.uid or 1000) < (users.${b}.uid or 1000)) (lib.attrNames users);
+    in
+      lib.head sorted;
+
+    photoGalleryUser =
+      if cfg.photoGallery.user != null
+      then cfg.photoGallery.user
+      else primaryUser;
+
+    autoVcUser =
+      if cfg.autoVc.user != null
+      then cfg.autoVc.user
+      else primaryUser;
+
+    autoVcSshKey =
+      if cfg.autoVc.sshKeyPath != null
+      then cfg.autoVc.sshKeyPath
+      else "/home/${autoVcUser}/.ssh/id_github_deploy";
   in {
     options.homelab.shellRepo = {
       enable = lib.mkEnableOption "Shell-Repo service runner for custom background scripts";
@@ -26,9 +50,9 @@
         enable = lib.mkEnableOption "Photo Gallery (Life Museum) automated capture and Immich sync daemon";
 
         user = lib.mkOption {
-          type = lib.types.str;
-          default = "kryisnn";
-          description = "User to run the photo-gallery daemon as";
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = "User to run the photo-gallery daemon as (default: first normal user account)";
         };
 
         environmentFile = lib.mkOption {
@@ -108,9 +132,9 @@
         enable = lib.mkEnableOption "Auto-VC automated Git add, commit, and push 24/7 daemon";
 
         user = lib.mkOption {
-          type = lib.types.str;
-          default = "kryisnn";
-          description = "User to run the auto-vc daemon as";
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = "User to run the auto-vc daemon as (default: first normal user account)";
         };
 
         repoPath = lib.mkOption {
@@ -139,8 +163,11 @@
 
         sshKeyPath = lib.mkOption {
           type = lib.types.nullOr (lib.types.either lib.types.path lib.types.str);
-          default = "/home/kryisnn/.ssh/id_github_deploy";
-          description = "Path to SSH private key used for git push";
+          default = null;
+          description = ''
+            Path to SSH private key used for git push.
+            Default (null): /home/<primary-user>/.ssh/id_github_deploy
+          '';
         };
 
         commitPrefix = lib.mkOption {
@@ -288,7 +315,7 @@
             serviceConfig =
               {
                 Type = "simple";
-                User = cfg.photoGallery.user;
+                User = photoGalleryUser;
                 Group = "users";
                 SupplementaryGroups = ["video"];
                 WorkingDirectory = cfg.photoGallery.dataDir;
@@ -333,16 +360,16 @@
                   if cfg.autoVc.pullBeforePush
                   then "true"
                   else "false";
-                HOME = "/home/${cfg.autoVc.user}";
+                HOME = "/home/${autoVcUser}";
               }
-              // lib.optionalAttrs (cfg.autoVc.sshKeyPath != null) {
-                GIT_SSH_COMMAND = "ssh -i ${toString cfg.autoVc.sshKeyPath} -o StrictHostKeyChecking=accept-new -o BatchMode=yes";
+              // lib.optionalAttrs (autoVcSshKey != null) {
+                GIT_SSH_COMMAND = "ssh -i ${autoVcSshKey} -o StrictHostKeyChecking=accept-new -o BatchMode=yes";
               };
 
             serviceConfig =
               {
                 Type = "simple";
-                User = cfg.autoVc.user;
+                User = autoVcUser;
                 Group = "users";
                 WorkingDirectory = cfg.autoVc.repoPath;
                 ExecStart = "${autoVcScript}/bin/auto-vc --daemon";
