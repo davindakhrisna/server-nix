@@ -10,12 +10,12 @@ This NixOS server deploys a curated, unified homelab suite across AI workflows, 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Glance** | `8080` | Native NixOS | `http://<server-ip>:8080` | `/var/lib/glance` | N/A |
 | **Immich** | `2283` | Native NixOS | `http://<server-ip>:2283` | `/var/lib/immich` | N/A |
-| **n8n** | `5678` | Native NixOS | `http://<server-ip>:5678` | `/var/lib/n8n` | `/persist/secrets/n8n.env` |
-| **OpenHands** | `3000` | Docker OCI | `http://<server-ip>:3000` | `/var/lib/openhands/workspace` | Docker socket mounted |
-| **9Router** | `20128` | Docker OCI | `http://<server-ip>:20128` | `/var/lib/9router` | `/persist/secrets/9router.env` |
-| **Headroom** | `8787` | Docker OCI | `http://<server-ip>:8787` | Stateless container | N/A |
-| **Vaultwarden** | `8222` | Native NixOS | `http://<server-ip>:8222` | `/var/lib/bitwarden_rs` | `/persist/secrets/vaultwarden.env` |
-| **Obsidian LiveSync** | `5984` | Native CouchDB | `http://<server-ip>:5984` | `/var/lib/couchdb` | In flake / CouchDB local.ini |
+| **n8n** | `5678` | Native NixOS | `http://<server-ip>:5678` | `/var/lib/n8n` | `/persist/secrets/n8n.env` (`N8N_ENCRYPTION_KEY`) |
+| **OpenHands** | `3000` | Docker OCI | `http://<server-ip>:3000` | `/var/lib/openhands/workspace` | Docker socket mounted; `/persist/secrets/openhands.env` (API keys) |
+| **9Router** | `20128` | Docker OCI | `http://<server-ip>:20128` | `/var/lib/9router` | `/persist/secrets/nine-router.env` (`INITIAL_PASSWORD`) |
+| **Headroom** | `8787` | Docker OCI | `http://<server-ip>:8787` | Stateless container | `/persist/secrets/headroom.env` (`HEADROOM_PROXY_TOKEN`) |
+| **Vaultwarden** | `8222` | Native NixOS | `http://<server-ip>:8222` | `/var/lib/bitwarden_rs` | N/A (user accounts; signups closed) |
+| **Obsidian LiveSync** | `5984` | Native CouchDB | `http://<server-ip>:5984` | `/var/lib/couchdb` | `/persist/secrets/obsidian-sync-admin-password` |
 | **Samba NAS** | `139, 445`| Native Samba | `smb://<server-ip>/` | `/persist/storage` | User samba credentials |
 | **Auto-VC** | N/A | Systemd Daemon | Git CLI (`origin main`) | `/home/kryisnn/.config/config` | `~/.ssh/id_github_deploy` |
 | **WANE Watcher** | N/A | Systemd Daemon | Terminal (`wane`) | `/home/kryisnn/.config/config/wane-log` | N/A |
@@ -110,11 +110,15 @@ Sensitive API keys, database passwords, and auth tokens should **never** be comm
 
 ```text
 /persist/secrets/
-├── n8n.env
-├── 9router.env
-├── photo-gallery.env
-└── vaultwarden.env
+├── openhands.env                        # INITIAL_PASSWORD placeholder / LLM API keys
+├── headroom.env                         # HEADROOM_PROXY_TOKEN
+├── n8n.env                              # N8N_ENCRYPTION_KEY
+├── nine-router.env                      # INITIAL_PASSWORD (9router login)
+├── obsidian-sync-admin-password         # CouchDB admin password (plain text)
+└── photo-gallery.env                    # IMMICH_API_KEY
 ```
+
+On fresh installs, `install.sh` generates all of these automatically with random values and prints them once. On an existing system, create any missing file before switching - services with a configured `environmentFile` fail to start while their file is absent.
 
 Ensure correct file permissions on your secrets:
 ```bash

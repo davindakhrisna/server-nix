@@ -88,12 +88,15 @@ homelab.shellRepo = {
   enable = true;
   autoVc = {
     enable = true;
+    # All options below are optional - defaults shown for a single-user host:
+    # repoPath defaults to var.flakePath, user defaults to the first normal
+    # user account, sshKeyPath defaults to ~/.ssh/id_github_deploy of that user.
     repoPath = "/home/kryisnn/.config/config"; # Target repository to monitor
     branch = "main";                         # Target Git branch
     remote = "origin";                       # Git remote
     intervalSeconds = 60;                    # Frequency of checks (seconds)
-    user = "kryisnn";                        # User to run systemd service as
-    sshKeyPath = "/home/kryisnn/.ssh/id_github_deploy"; # SSH private key
+    user = "kryisnn";                        # Override if >1 normal user exists
+    sshKeyPath = "/home/kryisnn/.ssh/id_github_deploy"; # Override deploy key location
     commitPrefix = "chore(auto-vc)";         # Commit message prefix
     pullBeforePush = true;                   # Pull rebase before push
   };

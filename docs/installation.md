@@ -77,9 +77,10 @@ The script will:
 2. Partition the disk with Disko (ESP `/boot`, Swap, Btrfs subvolumes: `@`, `@home`, `@nix`, `@persist`, `@log`).
 3. Activate swap immediately and route `TMPDIR` to disk.
 4. Install NixOS to `/mnt`.
-5. Copy the configuration repository into `/mnt/home/kryisnn/.config/config`.
-6. Prompt you to enter a password for user `kryisnn` via `nixos-enter`.
-7. Prompt to reboot into your new installation.
+5. Copy the configuration repository into `/mnt/home/<user>/.config/config` (the username is derived from the selected host's `users.users.<name>` definition) and symlink `/etc/nixos` to it.
+6. Generate random service secrets into `/mnt/persist/secrets/` (openhands, headroom, n8n, 9router, CouchDB admin) and print them once — save them.
+7. Prompt you to enter a password for the primary user via `nixos-enter`.
+8. Prompt to reboot into your new installation.
 
 ---
 
@@ -103,7 +104,7 @@ From your local development machine:
 
 ## 🔑 Post-Installation Setup (`post-install.sh`)
 
-After the server reboots and you log in as `kryisnn`:
+After the server reboots and you log in as the primary user (e.g. `kryisnn`):
 
 ```bash
 cd ~/.config/config
