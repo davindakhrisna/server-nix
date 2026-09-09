@@ -85,6 +85,74 @@
                         }
                       ];
                     }
+                    {
+                      type = "monitor";
+                      cache = "1m";
+                      title = "Services";
+                      sites = [
+                        {
+                          title = "Glance";
+                          url = "http://127.0.0.1:8080";
+                        }
+                        {
+                          title = "n8n";
+                          url = "http://127.0.0.1:5678";
+                        }
+                        {
+                          title = "Immich";
+                          url = "http://127.0.0.1:2283";
+                        }
+                        {
+                          title = "Vaultwarden";
+                          url = "http://127.0.0.1:8222";
+                        }
+                        {
+                          title = "Obsidian Sync";
+                          url = "http://127.0.0.1:5984";
+                        }
+                        {
+                          title = "OpenHands";
+                          url = "http://127.0.0.1:3000";
+                        }
+                        {
+                          title = "9Router";
+                          url = "http://127.0.0.1:20128";
+                        }
+                        {
+                          title = "Headroom";
+                          url = "http://127.0.0.1:8787/health";
+                        }
+                      ];
+                    }
+                    {
+                      type = "docker-containers";
+                    }
+                    {
+                      type = "server-stats";
+                      mountpoints = [
+                        "/"
+                      ];
+                    }
+                  ];
+                }
+                {
+                  size = "small";
+                  widgets = [
+                    {
+                      type = "hacker-news";
+                      limit = 15;
+                      collapse-after = 5;
+                      sort-by = "hot";
+                    }
+                    {
+                      type = "releases";
+                      repositories = [
+                        "immich-app/immich"
+                        "dani-garcia/vaultwarden"
+                        "n8n-io/n8n"
+                        "decolua/9router"
+                      ];
+                    }
                   ];
                 }
               ];
@@ -92,6 +160,9 @@
           ];
         };
       };
+
+      # docker-containers widget reads /var/run/docker.sock
+      systemd.services.glance.serviceConfig.SupplementaryGroups = ["docker"];
 
       networking.firewall.allowedTCPPorts = [cfg.port];
     };
