@@ -2,14 +2,17 @@
   flake.homeModules.dev = {
     config,
     pkgs,
-    osConfig ? {},
+    inputs,
     ...
   }: {
     imports = [
       ./_nvf.nix
+      inputs.nix-index-database.homeModules.nix-index
     ];
 
     programs = {
+      nix-index-database.comma.enable = true;
+
       git = {
         enable = true;
         settings = {
@@ -18,7 +21,6 @@
             email = "arpeggio.gns@gmail.com";
           };
           init.defaultBranch = "main";
-          safe.directory = [(osConfig.var.flakePath or "${config.home.homeDirectory}/.config/config") "*"];
         };
       };
 
@@ -48,22 +50,12 @@
 
     home = {
       packages = with pkgs; [
-        # Core Build & Compiler Tools
-        gcc
-        gnumake
-        pkg-config
+        # Language toolchains live in per-project devShells (direnv + use flake)
+        # This global list is only for editor/CLI tools useful everywhere.
 
-        # Core Database CLI
+        # Universal Dev CLI
+        uv # Python: venvs & pip replacement (pip installs into the nix store otherwise)
         sqlite
-
-        # Web & General Dev Languages
-        go
-        nodejs
-        python3
-
-        # Package Managers & Process Runners
-        pnpm
-        air
 
         # Containers & Networking Dev Tools
         lazydocker
@@ -76,15 +68,16 @@
         nixfmt
       ];
 
-      sessionPath = ["$HOME/.local/share/go/bin"];
+      sessionPath = ["$HOME/.local/share/go/bin" "$HOME/.local/bin"];
       sessionVariables = {
         # Go
         GOPATH = "$HOME/.local/share/go";
         GOMODCACHE = "$HOME/.cache/go/mod";
 
-        # Node & NPM
+        # Node & NPM (npm i -g works into ~/.local instead of the read-only store)
         NPM_CONFIG_USERCONFIG = "$HOME/.config/npm/npmrc";
         NPM_CONFIG_CACHE = "$HOME/.cache/npm";
+        NPM_CONFIG_PREFIX = "$HOME/.local";
         NODE_REPL_HISTORY = "$HOME/.local/state/node_repl_history";
 
         # Python

@@ -23,6 +23,10 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {
@@ -41,5 +45,12 @@
         default = {};
         description = "Home Manager modules";
       };
+
+      options.flake.templates = lib.mkOption {
+        type = lib.types.lazyAttrsOf lib.types.unspecified;
+        default = {};
+        description = "Dev environment templates (nix flake init -t .#<name>)";
+      };
+
     });
 }

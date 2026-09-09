@@ -1,11 +1,8 @@
 {
   flake.homeModules.home-manager = {
     config,
-    osConfig ? {},
     ...
-  }: let
-    flakePath = osConfig.var.flakePath or "${config.home.homeDirectory}/.config/config";
-  in {
+  }: {
     xdg.enable = true;
 
     home = {
@@ -13,8 +10,6 @@
 
       sessionVariables = {
         EDITOR = "nvim";
-        CONFIG_DIR = flakePath;
-        NH_FLAKE = flakePath;
 
         # Shell & tool history / configs
         HISTFILE = "$HOME/.local/state/bash/history";

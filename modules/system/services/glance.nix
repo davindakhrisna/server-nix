@@ -48,15 +48,15 @@
                           links = [
                             {
                               title = "Immich Photos";
-                              url = "http://localhost:2283";
+                              url = "http://homelab:2283";
                             }
                             {
                               title = "Vaultwarden";
-                              url = "http://localhost:8222";
+                              url = "http://homelab:8222";
                             }
                             {
                               title = "Obsidian CouchDB";
-                              url = "http://localhost:5984/_utils";
+                              url = "http://homelab:5984/_utils";
                             }
                           ];
                         }
@@ -65,19 +65,19 @@
                           links = [
                             {
                               title = "n8n Workflows";
-                              url = "http://localhost:5678";
+                              url = "http://homelab:5678";
                             }
                             {
                               title = "OpenHands";
-                              url = "http://localhost:3000";
+                              url = "http://homelab:3000";
                             }
                             {
                               title = "9Router";
-                              url = "http://localhost:20128";
+                              url = "http://homelab:20128";
                             }
                             {
                               title = "Headroom";
-                              url = "http://localhost:8787";
+                              url = "http://homelab:8787";
                             }
                           ];
                         }

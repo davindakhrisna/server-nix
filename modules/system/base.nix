@@ -90,6 +90,8 @@
           enable = true;
           flake = config.var.flakePath;
         };
+        # Run prebuilt dynamically-linked binaries (downloaded CLIs, fnm node, etc.)
+        nix-ld.enable = true;
         zsh.enable = true;
         git = {
           enable = true;
