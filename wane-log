@@ -1478,3 +1478,5 @@
 [2026-09-10 01:21:56] [ERROR] [init.scope] Timed out waiting for device /dev/tpm0.
 [2026-09-10 01:21:56] [WARN] [init.scope] dev-tpmrm0.device: Job dev-tpmrm0.device/start timed out.
 [2026-09-10 01:21:56] [ERROR] [init.scope] Timed out waiting for device /dev/tpmrm0.
+[2026-09-10 01:34:45] [WARN] [kernel] usb 3-1: Warning! Unlikely big volume range (=7810), cval->res is probably wrong.
+[2026-09-10 01:34:45] [WARN] [kernel] usb 3-1: [3] FU [Mic Capture Volume] ch = 1, val = -2049/5761/1
