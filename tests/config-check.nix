@@ -12,14 +12,11 @@ in
   assert builtins.all (port: !(builtins.elem port c.networking.firewall.allowedTCPPorts)) backendPorts;
   assert !(builtins.elem 22 c.networking.firewall.allowedTCPPorts);
   assert builtins.elem "tailscale0" c.networking.firewall.trustedInterfaces;
-  assert builtins.elem "--ssh" c.services.tailscale.extraUpFlags;
+  assert builtins.elem "--ssh" c.services.tailscale.extraSetFlags;
   assert c.homelab.ssh.tailscaleSshUsers == ["arpeggio.gns@gmail.com"];
   assert c.homelab.ssh.tailscaleSshTargetUser == "kryisnn";
-  assert c.services.glance.settings.theme.custom-css-file == "/assets/dashboard.css";
-  assert c.services.glance.settings.theme.disable-picker;
-  assert c.services.glance.settings.branding.app-name == "Homelab";
-  assert builtins.hasAttr "assets-path" c.services.glance.settings.server;
-  assert builtins.length (builtins.elemAt c.services.glance.settings.pages 0).columns == 2;
+  assert !(builtins.hasAttr "theme" c.services.glance.settings);
+  assert builtins.length (builtins.elemAt c.services.glance.settings.pages 0).columns == 3;
   assert builtins.all (
     container:
       builtins.match ".+@sha256:[0-9a-f]{64}" container.image
@@ -29,11 +26,10 @@ in
   assert c.services.samba.settings.nas."guest ok" == "no";
   assert c.services.samba.settings.nas."path" == "/srv/nas";
   assert c.homelab.tailscaleServe.routes."8443" == 2283;
-  assert c.homelab.tailscaleServe.routes."8449" == 8081;
-  assert builtins.match ".*--bind 127\\.0\\.0\\.1.*" c.systemd.services.glance-dashboard-data.serviceConfig.ExecStart != null;
+  assert !(builtins.hasAttr "8449" c.homelab.tailscaleServe.routes);
+  assert !(builtins.hasAttr "glance-dashboard-data" c.systemd.services);
   assert c.homelab.glance.monitoredServices != [];
-  assert c.homelab.glance.photoSource.directory == "/var/lib/photo-gallery/captures";
-  assert !(builtins.any (value: builtins.isString value && builtins.match ".*NINE_ROUTER_DASHBOARD_API_KEY.*" value != null) (builtins.attrValues c.services.glance.settings));
+  assert (builtins.elemAt (builtins.elemAt (builtins.elemAt c.services.glance.settings.pages 0).columns 1).widgets 1).type == "monitor";
   assert c.services.restic.backups.homelab.initialize;
   assert c.services.restic.backups.homelab.runCheck;
   assert !c.services.immich.machine-learning.enable;

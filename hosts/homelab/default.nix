@@ -64,8 +64,6 @@
           immich.enable = true;
           glance = {
             enable = true;
-            dashboardDataPort = 8081;
-            dashboardEnvironmentFile = "/persist/secrets/glance-dashboard.env";
             bookmarks = [
               {
                 title = "Homelab Services";
@@ -106,50 +104,52 @@
                   }
                 ];
               }
-              {
-                title = "Quality of Life";
-                links = [];
-              }
-              {
-                title = "Learning Resources";
-                links = [];
-              }
             ];
             monitoredServices = [
               {
                 title = "Glance";
-                url = "http://127.0.0.1:8080";
+                icon = "sh:glance";
+                backendPort = 8080;
+                checkUrl = "http://127.0.0.1:8080";
               }
               {
                 title = "n8n";
-                url = "http://127.0.0.1:5678";
+                icon = "si:n8n";
+                backendPort = 5678;
+                checkUrl = "http://127.0.0.1:5678";
               }
               {
                 title = "Immich";
-                url = "http://127.0.0.1:2283";
+                icon = "si:immich";
+                backendPort = 2283;
+                checkUrl = "http://127.0.0.1:2283";
               }
               {
                 title = "Vaultwarden";
-                url = "http://127.0.0.1:8222";
+                icon = "si:vaultwarden";
+                backendPort = 8222;
+                checkUrl = "http://127.0.0.1:8222";
               }
               {
                 title = "Obsidian Sync";
-                url = "http://127.0.0.1:5984";
+                icon = "si:apachecouchdb";
+                backendPort = 5984;
+                path = "/_utils";
+                checkUrl = "http://127.0.0.1:5984";
               }
               {
                 title = "9Router";
-                url = "http://127.0.0.1:20128";
+                icon = "mdi:router-wireless";
+                backendPort = 20128;
+                checkUrl = "http://127.0.0.1:20128";
               }
               {
                 title = "Headroom";
-                url = "http://127.0.0.1:8787/health";
+                icon = "mdi:brain";
+                backendPort = 8787;
+                checkUrl = "http://127.0.0.1:8787/health";
               }
             ];
-            photoSource = {
-              directory = "/var/lib/photo-gallery/captures";
-              immichBackendPort = 2283;
-            };
-            nineRouterUrl = "http://127.0.0.1:20128";
           };
 
           # Each application gets a root URL on its own HTTPS port.
@@ -164,7 +164,6 @@
               "8446" = 5984;
               "8447" = 20128;
               "8448" = 8787;
-              "8449" = 8081;
             };
           };
           vaultwarden = {

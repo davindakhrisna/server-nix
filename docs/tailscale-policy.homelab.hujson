@@ -15,7 +15,7 @@
   ],
   "ssh": [
     {
-      "action": "check",
+      "action": "accept",
       "src": ["group:homelab-ssh"],
       "dst": ["autogroup:self"],
       "users": ["kryisnn"],

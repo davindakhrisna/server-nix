@@ -26,6 +26,12 @@ tailnet identity; it does not use your normal SSH public key. A policy denial me
 policy needs adjustment, while an ordinary OpenSSH `publickey` error concerns
 the target account's authorized keys.
 
+The homelab policy uses `action: "accept"` so mobile SSH clients do not have to
+complete an interactive browser check. In Termius, use `homelab` (or the
+100.x Tailscale address) on port 22 with username `kryisnn` and no password or
+private key. Tailscale SSH accepts the SSH protocol's `none` authentication
+method after the tailnet policy has identified and authorized the device.
+
 Log in with `sudo tailscale up --ssh`. Enable MagicDNS and HTTPS certificates in
 the Tailscale admin console, then run `sudo systemctl restart tailscale-serve`.
 Use `tailscale serve status` to find the exact hostname. Use the full
@@ -52,12 +58,8 @@ Tailscale Serve generates the dashboard hostname, n8n callback URLs and
 Vaultwarden domain under `/run/homelab-urls`, and refreshes those applications.
 Serve retries after startup/login failures. Reapply it after renaming the Tailscale node.
 
-The Glance companion endpoint on 8449 is also tailnet-only and is embedded by
-the main dashboard. It refreshes local service health, the latest Photo Gallery
-capture, and optional 9Router quota/usage data. Create a dedicated read-only
-9Router API key and set `NINE_ROUTER_DASHBOARD_API_KEY=` in
-`/persist/secrets/glance-dashboard.env`; until then, Glance shows a clear
-“not configured” state and never sends the key to the browser.
+Glance uses its native monitor widget to check each backend over loopback. The
+service names link to their corresponding Tailscale Serve HTTPS addresses.
 
 ## Credentials and NAS migration
 

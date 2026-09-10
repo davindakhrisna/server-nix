@@ -36,7 +36,4 @@ fi
 if [[ ! -e "$secrets_dir/openhands.env" ]]; then
     printf '# OpenHands is disabled until an isolated execution host is available.\n' > "$secrets_dir/openhands.env"
 fi
-if [[ ! -e "$secrets_dir/glance-dashboard.env" ]]; then
-    printf '# Dedicated read-only 9Router API key; never use the container password here.\nNINE_ROUTER_DASHBOARD_API_KEY=\n' > "$secrets_dir/glance-dashboard.env"
-fi
-chmod 0600 "$secrets_dir/photo-gallery.env" "$secrets_dir/openhands.env" "$secrets_dir/glance-dashboard.env"
+chmod 0600 "$secrets_dir/photo-gallery.env" "$secrets_dir/openhands.env"

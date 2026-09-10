@@ -65,8 +65,10 @@
       services.tailscale = {
         enable = true;
         useRoutingFeatures = "server";
-        extraUpFlags = [
-          "--ssh" # Enable Tailscale SSH (zero-password auth for authenticated tailscale nodes)
+        # Reconcile this on every activation, including for nodes that were
+        # authenticated interactively before this option was configured.
+        extraSetFlags = [
+          "--ssh" # Enable Tailscale SSH for authenticated tailnet nodes
         ];
       };
 

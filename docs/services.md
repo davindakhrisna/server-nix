@@ -6,7 +6,7 @@ has a root URL; path prefixes such as `/immich` are not used.
 
 | Service | Client address | Persistent data | Credentials |
 |---|---|---|---|
-| Glance | `https://<fqdn>/` | `/var/lib/glance` | Tailnet access; optional dashboard key in `/persist/secrets/glance-dashboard.env` |
+| Glance | `https://<fqdn>/` | `/var/lib/glance` | Tailnet access; native service monitor checks loopback backends |
 | Immich | `https://<fqdn>:8443/` | `/var/lib/immich` and PostgreSQL | Immich account |
 | Vaultwarden | `https://<fqdn>:8444/` | `/var/lib/bitwarden_rs` | Vaultwarden account; registration closed |
 | n8n | `https://<fqdn>:8445/` | `/var/lib/n8n` (systemd private state) | `/persist/secrets/n8n.env` |

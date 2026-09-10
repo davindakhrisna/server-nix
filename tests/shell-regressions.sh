@@ -11,7 +11,7 @@ mkdir -p "$HOME"
 bash "$repo/scripts/provision-secrets.sh" "$work/secrets" > "$work/output"
 test ! -s "$work/output"
 test "$(stat -c %a "$work/secrets")" = 700
-for file in n8n.env nine-router.env headroom.env obsidian-sync-admin-password restic-password photo-gallery.env glance-dashboard.env; do
+for file in n8n.env nine-router.env headroom.env obsidian-sync-admin-password restic-password photo-gallery.env; do
     test -s "$work/secrets/$file"
     test "$(stat -c %a "$work/secrets/$file")" = 600
 done

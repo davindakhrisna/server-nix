@@ -4,6 +4,4 @@ in
   assert c.homelab.ssh.tailscaleSshUsers == [];
   assert c.homelab.ssh.tailscaleSshTargetUser == null;
   assert c.homelab.glance.bookmarks == [];
-  assert c.homelab.glance.monitoredServices == [];
-  assert c.homelab.glance.photoSource == null;
-  assert c.homelab.glance.dashboardDataPort == null; true
+  assert c.homelab.glance.monitoredServices == []; true
