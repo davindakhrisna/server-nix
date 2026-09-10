@@ -185,9 +185,10 @@
                       }
                     ]
                     ++ lib.optional (cfg.dashboardDataPort != null) {
-                      type = "custom";
+                      type = "iframe";
                       title = "Homelab overview";
-                      html = ''<iframe title="Homelab overview" src="${dashboardUrl}" style="border:0;width:100%;min-height:440px"></iframe>'';
+                      source = dashboardUrl;
+                      height = 440;
                     }
                     ++ [
                       {
