@@ -56,9 +56,97 @@
             # A folder on the system disk does not protect against disk failure.
             # Set requiredMount when using an external backup disk.
           };
-          ssh.enable = true;
+          ssh = {
+            enable = true;
+            tailscaleSshUsers = ["arpeggio.gns@gmail.com"];
+            tailscaleSshTargetUser = "kryisnn";
+          };
           immich.enable = true;
-          glance.enable = true;
+          glance = {
+            enable = true;
+            dashboardDataPort = 8081;
+            dashboardEnvironmentFile = "/persist/secrets/glance-dashboard.env";
+            bookmarks = [
+              {
+                title = "Homelab Services";
+                links = [
+                  {
+                    title = "Immich Photos";
+                    backendPort = 2283;
+                  }
+                  {
+                    title = "Vaultwarden";
+                    backendPort = 8222;
+                  }
+                  {
+                    title = "Obsidian CouchDB";
+                    backendPort = 5984;
+                    path = "/_utils";
+                  }
+                ];
+              }
+              {
+                title = "AI & Automation";
+                links = [
+                  {
+                    title = "n8n Workflows";
+                    backendPort = 5678;
+                  }
+                  {
+                    title = "9Router";
+                    backendPort = 20128;
+                  }
+                  {
+                    title = "Headroom";
+                    backendPort = 8787;
+                  }
+                ];
+              }
+              {
+                title = "Quality of Life";
+                links = [];
+              }
+              {
+                title = "Learning Resources";
+                links = [];
+              }
+            ];
+            monitoredServices = [
+              {
+                title = "Glance";
+                url = "http://127.0.0.1:8080";
+              }
+              {
+                title = "n8n";
+                url = "http://127.0.0.1:5678";
+              }
+              {
+                title = "Immich";
+                url = "http://127.0.0.1:2283";
+              }
+              {
+                title = "Vaultwarden";
+                url = "http://127.0.0.1:8222";
+              }
+              {
+                title = "Obsidian Sync";
+                url = "http://127.0.0.1:5984";
+              }
+              {
+                title = "9Router";
+                url = "http://127.0.0.1:20128";
+              }
+              {
+                title = "Headroom";
+                url = "http://127.0.0.1:8787/health";
+              }
+            ];
+            photoSource = {
+              directory = "/var/lib/photo-gallery/captures";
+              immichBackendPort = 2283;
+            };
+            nineRouterUrl = "http://127.0.0.1:20128";
+          };
 
           # Each application gets a root URL on its own HTTPS port.
           # Requires Tailscale login, MagicDNS and HTTPS certificates.
@@ -72,6 +160,7 @@
               "8446" = 5984;
               "8447" = 20128;
               "8448" = 8787;
+              "8449" = 8081;
             };
           };
           vaultwarden = {

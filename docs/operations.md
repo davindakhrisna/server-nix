@@ -12,7 +12,17 @@ Web backends now bind to loopback. Their old LAN HTTP addresses stop working.
 OpenHands is disabled, and the dashboard no longer has Docker engine access.
 Auto-VC and its repository/log destination are unchanged.
 
-## HTTPS access
+## Tailscale SSH and HTTPS access
+
+SSH is intentionally not open on the LAN or public interfaces. Apply
+[`tailscale-policy.homelab.hujson`](tailscale-policy.homelab.hujson) in the
+Tailscale admin console (or adapt
+[`tailscale-policy.example.hujson`](tailscale-policy.example.hujson) for another
+tailnet), tag the node `tag:homelab`, then connect from a permitted Tailscale
+client with `ssh kryisnn@homelab`. Tailscale SSH verifies the tailnet identity;
+it does not use your normal SSH public key. A policy denial means the tailnet
+policy needs adjustment, while an ordinary OpenSSH `publickey` error concerns
+the target account's authorized keys.
 
 Log in with `sudo tailscale up --ssh`. Enable MagicDNS and HTTPS certificates in
 the Tailscale admin console, then run `sudo systemctl restart tailscale-serve`.
@@ -28,6 +38,7 @@ Use `tailscale serve status` to find the exact hostname. Use the full
 | CouchDB / Obsidian | 8446 | 5984 |
 | 9Router | 8447 | 20128 |
 | Headroom | 8448 | 8787 |
+| Glance dashboard data | 8449 | 8081 |
 
 For example, Immich uses `https://homelab.<tailnet>.ts.net:8443/`, with no `/immich`
 suffix. Change the server address in mobile apps and Obsidian. All clients must
@@ -38,6 +49,13 @@ separate, explicitly authorized ingress if public webhooks are needed.
 Tailscale Serve generates the dashboard hostname, n8n callback URLs and
 Vaultwarden domain under `/run/homelab-urls`, and refreshes those applications.
 Serve retries after startup/login failures. Reapply it after renaming the Tailscale node.
+
+The Glance companion endpoint on 8449 is also tailnet-only and is embedded by
+the main dashboard. It refreshes local service health, the latest Photo Gallery
+capture, and optional 9Router quota/usage data. Create a dedicated read-only
+9Router API key and set `NINE_ROUTER_DASHBOARD_API_KEY=` in
+`/persist/secrets/glance-dashboard.env`; until then, Glance shows a clear
+“not configured” state and never sends the key to the browser.
 
 ## Credentials and NAS migration
 

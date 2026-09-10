@@ -1,0 +1,25 @@
+// Ready-to-apply policy for hosts/homelab/default.nix.
+// Tag the homelab node with tag:homelab before applying this policy.
+{
+  "groups": {
+    "group:homelab-ssh": ["arpeggio.gns@gmail.com"],
+  },
+  "tagOwners": {
+    "tag:homelab": ["autogroup:admin"],
+  },
+  "grants": [
+    {
+      "src": ["group:homelab-ssh"],
+      "dst": ["tag:homelab"],
+      "ip": ["tcp:22"],
+    },
+  ],
+  "ssh": [
+    {
+      "action": "check",
+      "src": ["group:homelab-ssh"],
+      "dst": ["tag:homelab"],
+      "users": ["kryisnn"],
+    },
+  ],
+}

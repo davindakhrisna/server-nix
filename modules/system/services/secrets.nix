@@ -10,7 +10,7 @@
         homelab-secrets = {
           description = "Provision missing homelab credentials without replacing existing keys";
           wantedBy = ["multi-user.target"];
-          before = ["n8n.service" "couchdb.service" "docker-nine-router.service" "docker-headroom.service" "photo-gallery.service" "restic-backups-homelab.service"];
+          before = ["n8n.service" "couchdb.service" "docker-nine-router.service" "docker-headroom.service" "photo-gallery.service" "glance-dashboard-refresh.service" "restic-backups-homelab.service"];
           path = [pkgs.coreutils];
           script = builtins.readFile ../../../scripts/provision-secrets.sh;
           serviceConfig = {
@@ -26,6 +26,7 @@
         ++ lib.optional config.homelab.nineRouter.enable "docker-nine-router"
         ++ lib.optional config.homelab.headroom.enable "docker-headroom"
         ++ lib.optional (config.homelab.shellRepo.enable && config.homelab.shellRepo.photoGallery.enable) "photo-gallery"
+        ++ lib.optional (config.homelab.glance.enable && config.homelab.glance.dashboardDataPort != null) "glance-dashboard-refresh"
       ) (_: {
         requires = ["homelab-secrets.service"];
         after = ["homelab-secrets.service"];

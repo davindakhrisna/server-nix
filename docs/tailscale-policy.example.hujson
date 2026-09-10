@@ -1,0 +1,26 @@
+// Tailscale tailnet policy template. Apply this in the Tailscale admin console;
+// it is tailnet state, not NixOS state. Replace the identity, tag, and local
+// account below for each deployment.
+{
+  "groups": {
+    "group:homelab-ssh": ["your-account@example.com"],
+  },
+  "tagOwners": {
+    "tag:homelab": ["autogroup:admin"],
+  },
+  "grants": [
+    {
+      "src": ["group:homelab-ssh"],
+      "dst": ["tag:homelab"],
+      "ip": ["tcp:22"],
+    },
+  ],
+  "ssh": [
+    {
+      "action": "check",
+      "src": ["group:homelab-ssh"],
+      "dst": ["tag:homelab"],
+      "users": ["your-local-user"],
+    },
+  ],
+}

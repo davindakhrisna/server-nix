@@ -18,6 +18,18 @@
         default = [];
         description = "SSH public keys allowed to log into normal user accounts";
       };
+
+      tailscaleSshUsers = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+        description = "Tailnet identities permitted by the accompanying Tailscale SSH policy";
+      };
+
+      tailscaleSshTargetUser = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Local account that the Tailscale SSH policy may target";
+      };
     };
 
     config = lib.mkIf cfg.enable {
@@ -25,6 +37,9 @@
       services.openssh = {
         enable = true;
         ports = [22];
+        # The daemon remains available on tailscale0 because that interface is
+        # trusted below; do not let the OpenSSH module open it globally.
+        openFirewall = false;
 
         settings = {
           # Strictly forbid password authentication
@@ -60,9 +75,14 @@
         enable = true;
         # Trust all traffic originating on the Tailscale virtual interface
         trustedInterfaces = ["tailscale0"];
-        # Allow SSH from local LAN network
-        allowedTCPPorts = [22];
       };
+
+      assertions = [
+        {
+          assertion = cfg.tailscaleSshUsers == [] || cfg.tailscaleSshTargetUser != null;
+          message = "homelab.ssh.tailscaleSshTargetUser must be set when tailscaleSshUsers is nonempty.";
+        }
+      ];
 
       # Automatically inject authorized keys into all normal users if specified
       users.users = lib.mkIf (cfg.authorizedKeys != []) (

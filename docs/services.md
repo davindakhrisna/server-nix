@@ -6,7 +6,7 @@ has a root URL; path prefixes such as `/immich` are not used.
 
 | Service | Client address | Persistent data | Credentials |
 |---|---|---|---|
-| Glance | `https://<fqdn>/` | `/var/lib/glance` | Tailnet access |
+| Glance | `https://<fqdn>/` | `/var/lib/glance` | Tailnet access; optional dashboard key in `/persist/secrets/glance-dashboard.env` |
 | Immich | `https://<fqdn>:8443/` | `/var/lib/immich` and PostgreSQL | Immich account |
 | Vaultwarden | `https://<fqdn>:8444/` | `/var/lib/bitwarden_rs` | Vaultwarden account; registration closed |
 | n8n | `https://<fqdn>:8445/` | `/var/lib/n8n` (systemd private state) | `/persist/secrets/n8n.env` |
@@ -20,7 +20,7 @@ has a root URL; path prefixes such as `/immich` are not used.
 | Photo Gallery | Background capture and upload | `/var/lib/photo-gallery` | Real Immich API key in `/persist/secrets/photo-gallery.env` |
 | Restic backup | Daily around 03:00 | `/persists/secret` destination | `/persist/secrets/restic-password` |
 
-The firewall still permits SSH and authenticated LAN NAS access. Web backends
+SSH is available only through `tailscale0` and the Tailscale SSH policy; authenticated LAN NAS access remains available. Web backends
 are not reachable directly through their old LAN HTTP ports. Tailnet access is
 controlled by your Tailscale policies, which are not configured in this repository.
 
