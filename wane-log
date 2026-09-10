@@ -1462,3 +1462,7 @@
 [2026-09-10 00:46:00] [ERROR] [init.scope] Timed out waiting for device /dev/tpmrm0.
 [2026-09-10 00:46:00] [WARN] [init.scope] dev-tpm0.device: Job dev-tpm0.device/start timed out.
 [2026-09-10 00:46:00] [ERROR] [init.scope] Timed out waiting for device /dev/tpm0.
+[2026-09-10 01:12:36] [WARN] [init.scope] /etc/systemd/system/vulnix.service:10: Nice priority out of range, ignoring: 20
+[2026-09-10 01:12:37] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-10 01:12:38] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-10 01:12:38] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
