@@ -1458,3 +1458,7 @@
 [2026-09-10 00:44:28] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
 [2026-09-10 00:44:29] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
 [2026-09-10 00:44:29] [WARN] [user@1000.service] Failed to adjust io pressure threshold, ignoring: Device or resource busy
+[2026-09-10 00:46:00] [WARN] [init.scope] dev-tpmrm0.device: Job dev-tpmrm0.device/start timed out.
+[2026-09-10 00:46:00] [ERROR] [init.scope] Timed out waiting for device /dev/tpmrm0.
+[2026-09-10 00:46:00] [WARN] [init.scope] dev-tpm0.device: Job dev-tpm0.device/start timed out.
+[2026-09-10 00:46:00] [ERROR] [init.scope] Timed out waiting for device /dev/tpm0.
