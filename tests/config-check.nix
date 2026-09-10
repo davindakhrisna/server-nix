@@ -1,6 +1,9 @@
 config: let
   c = config;
+  primaryUser = c.var.primaryUser;
   backendPorts = [8080 2283 8222 5678 5984 20128 8787 3000];
+  leftWidgets = (builtins.elemAt (builtins.elemAt c.services.glance.settings.pages 0).columns 0).widgets;
+  weatherWidgets = builtins.filter (widget: widget.type == "weather") leftWidgets;
 in
   assert !c.homelab.openhands.enable;
   assert !(builtins.hasAttr "openhands" c.virtualisation.oci-containers.containers);
@@ -13,12 +16,14 @@ in
   assert !(builtins.elem 22 c.networking.firewall.allowedTCPPorts);
   assert builtins.elem "tailscale0" c.networking.firewall.trustedInterfaces;
   assert builtins.elem "--ssh" c.services.tailscale.extraSetFlags;
-  assert c.homelab.ssh.tailscaleSshUsers == ["arpeggio.gns@gmail.com"];
-  assert c.homelab.ssh.tailscaleSshTargetUser == "kryisnn";
+  assert primaryUser != null;
+  assert builtins.hasAttr primaryUser c.users.users;
+  assert c.homelab.ssh.tailscaleSshUsers == [] || c.homelab.ssh.tailscaleSshTargetUser == primaryUser;
   assert c.services.glance.settings.theme.background-color == "240 8 5";
   assert c.services.glance.settings.theme.custom-css-file == "/assets/user.css";
   assert builtins.length (builtins.elemAt c.services.glance.settings.pages 0).columns == 3;
-  assert (builtins.elemAt (builtins.elemAt (builtins.elemAt c.services.glance.settings.pages 0).columns 0).widgets 1).location == "Surabaya, Indonesia";
+  assert c.homelab.glance.weatherLocation == null -> weatherWidgets == [];
+  assert c.homelab.glance.weatherLocation != null -> (builtins.head weatherWidgets).location == c.homelab.glance.weatherLocation;
   assert builtins.all (
     container:
       builtins.match ".+@sha256:[0-9a-f]{64}" container.image
@@ -35,5 +40,4 @@ in
   assert c.services.restic.backups.homelab.initialize;
   assert c.services.restic.backups.homelab.runCheck;
   assert !c.services.immich.machine-learning.enable;
-  assert c.homelab.shellRepo.autoVc.enable;
-  assert c.homelab.shellRepo.autoVc.intervalSeconds == 60; true
+  assert !c.homelab.shellRepo.autoVc.enable || c.homelab.shellRepo.autoVc.intervalSeconds == 60; true

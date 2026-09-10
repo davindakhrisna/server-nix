@@ -16,10 +16,6 @@
       git = {
         enable = true;
         settings = {
-          user = {
-            name = "davindakhrisna";
-            email = "arpeggio.gns@gmail.com";
-          };
           init.defaultBranch = "main";
         };
       };

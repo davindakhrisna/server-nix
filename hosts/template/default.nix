@@ -29,13 +29,13 @@
       # Host-specific Configuration
       ({pkgs, ...}: {
         networking.hostName = "template"; # CHANGEME: Hostname
-        time.timeZone = "Asia/Jakarta"; # CHANGEME: Timezone
+        time.timeZone = "UTC"; # CHANGEME: Timezone
         i18n.defaultLocale = "en_US.UTF-8";
 
         # User Account (System-level)
-        users.users.yourusername = {
-          # CHANGEME: Username
+        users.users.operator = {
           isNormalUser = true;
+          uid = 1000;
           shell = pkgs.zsh;
           extraGroups = [
             "wheel"
@@ -69,14 +69,15 @@
 
         # Hardware & Flake Path
         var = {
+          primaryUser = "operator";
           flakePath = "/etc/nixos"; # CHANGEME: Path to your flake repository
-          cpu = "intel"; # "intel" or "amd"
+          cpu = null; # "intel", "amd", or null
           gpu = null; # "nvidia", "amd", "intel", or null
           dualBoot.enable = false;
         };
 
         # User Configuration (Home Manager level)
-        home-manager.users.yourusername = {...}: {
+        home-manager.users.operator = {...}: {
           imports = with self.homeModules; [
             home-manager
             shell

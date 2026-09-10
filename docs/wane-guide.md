@@ -74,7 +74,7 @@ Example output:
    WANE Watcher: Collector Status
 ========================================
 Daemon Status:   ACTIVE (Running)
-Log File Path:   /home/kryisnn/.config/config/wane-log
+Log File Path:   /var/log/wane/wane-log
 Log File Size:   248 KB
 Total Lines:     1,420
 Warnings (WARN): 1,180
@@ -100,7 +100,7 @@ WANE is enabled declaratively in [`hosts/homelab/default.nix`](../hosts/homelab/
 ```nix
 homelab.shellRepo.waneWatcher = {
   enable = true;
-  logFile = "/home/kryisnn/.config/config/wane-log"; # Log destination
+  logFile = "/var/log/wane/wane-log";                # Log destination
   maxLogSizeMB = 50;                               # Auto-rotation threshold
   user = "root";                                   # Collector process user
 };

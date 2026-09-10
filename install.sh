@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 
 # Defaults
 MODE="local"
-HOST_NAME="homelab"
+HOST_NAME=""
 TARGET_DISK=""
 REMOTE_TARGET=""
 CACHE_PATH=""
@@ -33,7 +33,7 @@ ${BOLD}Options:${NC}
   -m, --mode <local|remote>   Installation mode (default: local)
                               'local':  Run directly from NixOS Live USB on target machine.
                               'remote': Install remotely over SSH to Ubuntu/Debian using nixos-anywhere.
-  -H, --host <hostname>       NixOS host configuration to install (default: homelab)
+  -H, --host <hostname>       NixOS host configuration to install (required)
   -d, --disk <device>         Target disk (e.g., /dev/nvme0n1, /dev/sda, or /dev/disk/by-id/...)
   -t, --target <user@ip>      Remote SSH target (required for remote mode, e.g. root@192.168.1.50)
   -c, --cache <path>          Path to pre-built nix binary cache (e.g., /mnt-usb/nix-cache)
@@ -43,16 +43,16 @@ ${BOLD}Options:${NC}
 
 ${BOLD}Examples:${NC}
   # 1. Interactive local install from Live USB:
-  sudo ./install.sh
+  sudo ./install.sh --host <host>
 
   # 2. Local install specifying disk and host:
-  sudo ./install.sh --disk /dev/nvme0n1 --host homelab
+  sudo ./install.sh --disk /dev/nvme0n1 --host <host>
 
   # 3. Remote install directly over running Ubuntu server via SSH:
-  ./install.sh --mode remote --host homelab --target root@192.168.1.100
+  ./install.sh --mode remote --host <host> --target root@192.168.1.100
 
   # 4. Local install with pre-built cache from USB (zero compilation):
-  sudo ./install.sh --cache /mnt-usb/nix-cache"
+  sudo ./install.sh --host <host> --cache /mnt-usb/nix-cache"
     exit 0
 }
 
@@ -98,6 +98,11 @@ case "$MODE" in
     *) echo "Invalid installation mode: $MODE" >&2; exit 1 ;;
 esac
 
+if [[ -z "$HOST_NAME" ]]; then
+    echo "Error: --host is required; select an explicitly personalized host configuration." >&2
+    exit 1
+fi
+
 # Ensure we're in the repository root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -115,11 +120,28 @@ if [[ ! -d "hosts/$HOST_NAME" ]]; then
     exit 1
 fi
 
-# Derive primary username from the host configuration (users.users.<name>)
-USER_NAME=$(grep -oP 'users\.users\.\K[a-zA-Z0-9_-]+(?=\s*=\s*\{)' "hosts/$HOST_NAME/default.nix" 2>/dev/null | head -1)
+if [[ -f "hosts/$HOST_NAME/_local.example.nix" && ! -f "hosts/$HOST_NAME/_local.nix" ]]; then
+    echo "Error: hosts/$HOST_NAME/_local.nix is missing." >&2
+    echo "Copy _local.example.nix to _local.nix and personalize it before installation." >&2
+    exit 1
+fi
+
+# Derive identity and ownership from the evaluated host configuration rather
+# than assuming a source-code shape or fixed uid/gid.
+USER_NAME=$(nix --extra-experimental-features "nix-command flakes" eval --raw \
+    "path:.#nixosConfigurations.$HOST_NAME.config.var.primaryUser")
 if [[ -z "$USER_NAME" ]]; then
-    echo -e "${RED}Error:${NC} Could not detect primary user in hosts/$HOST_NAME/default.nix" >&2
-    echo "Define it as: users.users.<username> = { ... }" >&2
+    echo -e "${RED}Error:${NC} config.var.primaryUser is not set for '$HOST_NAME'." >&2
+    exit 1
+fi
+USER_GROUP=$(nix --extra-experimental-features "nix-command flakes" eval --raw \
+    "path:.#nixosConfigurations.$HOST_NAME.config.users.users.\"$USER_NAME\".group")
+USER_UID=$(nix --extra-experimental-features "nix-command flakes" eval --json \
+    "path:.#nixosConfigurations.$HOST_NAME.config.users.users.\"$USER_NAME\".uid")
+USER_GID=$(nix --extra-experimental-features "nix-command flakes" eval --json \
+    "path:.#nixosConfigurations.$HOST_NAME.config.users.groups.\"$USER_GROUP\".gid")
+if [[ ! "$USER_UID" =~ ^[0-9]+$ || ! "$USER_GID" =~ ^[0-9]+$ ]]; then
+    echo -e "${RED}Error:${NC} Primary user uid/gid must evaluate to numeric values." >&2
     exit 1
 fi
 
@@ -189,11 +211,11 @@ if [[ "$MODE" == "remote" ]]; then
     mkdir -p "$REMOTE_FILES/home/$USER_NAME/.config/config"
     cp -r . "$REMOTE_FILES/home/$USER_NAME/.config/config/"
     nix --extra-experimental-features "nix-command flakes" eval --raw \
-        ".#nixosConfigurations.$HOST_NAME.config.system.build.toplevel.drvPath" >/dev/null
+        "path:.#nixosConfigurations.$HOST_NAME.config.system.build.toplevel.drvPath" >/dev/null
     nix --extra-experimental-features "nix-command flakes" run github:nix-community/nixos-anywhere -- \
-        --flake ".#$HOST_NAME" \
+        --flake "path:.#$HOST_NAME" \
         --extra-files "$REMOTE_FILES" \
-        --chown "/home/$USER_NAME/.config" 1000:100 \
+        --chown "/home/$USER_NAME/.config" "$USER_UID:$USER_GID" \
         "$REMOTE_TARGET"
 
     echo -e "\n${GREEN}${BOLD}✓ Remote installation completed successfully!${NC}"
@@ -531,7 +553,7 @@ echo -e "${BLUE}-------------------------------${NC}"
 
 # 2. Run NixOS Install
 echo -e "\n${GREEN}${BOLD}[2/3] Installing NixOS system closure to /mnt...${NC}"
-nixos-install --flake ".#$HOST_NAME" --no-channel-copy "${CACHE_INSTALL_ARGS[@]}" "${EXTRA_INSTALL_ARGS[@]}"
+nixos-install --flake "path:.#$HOST_NAME" --no-channel-copy "${CACHE_INSTALL_ARGS[@]}" "${EXTRA_INSTALL_ARGS[@]}"
 
 # 2.5 Post-Install System Configuration
 echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository..."
@@ -539,7 +561,7 @@ echo -e "\n${GREEN}==>${NC} Setting up user workspace & configuration repository
 # Copy configuration repository to /home/$USER_NAME/.config/config
 mkdir -p "/mnt/home/$USER_NAME/.config/config"
 cp -r . "/mnt/home/$USER_NAME/.config/config/"
-chown -R 1000:100 "/mnt/home/$USER_NAME/.config"
+chown -R "$USER_UID:$USER_GID" "/mnt/home/$USER_NAME/.config"
 mkdir -p /mnt/etc
 ln -sfn "/home/$USER_NAME/.config/config" /mnt/etc/nixos
 echo -e "  ${GREEN}✓ Configuration copied to /home/$USER_NAME/.config/config (linked to /etc/nixos)${NC}"

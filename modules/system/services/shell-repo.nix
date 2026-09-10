@@ -22,11 +22,14 @@
     # Primary user = the normal (human) user with the lowest uid, i.e. the
     # first account created. Hosts with several users should set the user
     # options explicitly.
-    primaryUser = let
-      users = lib.filterAttrs (_: u: u.isNormalUser) config.users.users;
-      sorted = lib.sort (a: b: (users.${a}.uid or 1000) < (users.${b}.uid or 1000)) (lib.attrNames users);
-    in
-      lib.head sorted;
+    primaryUser =
+      if config.var.primaryUser != null
+      then config.var.primaryUser
+      else let
+        users = lib.filterAttrs (_: u: u.isNormalUser) config.users.users;
+        sorted = lib.sort (a: b: (users.${a}.uid or 1000) < (users.${b}.uid or 1000)) (lib.attrNames users);
+      in
+        lib.head sorted;
 
     photoGalleryUser =
       if cfg.photoGallery.user != null
@@ -47,7 +50,7 @@
       enable = lib.mkEnableOption "Shell-Repo service runner for custom background scripts";
 
       photoGallery = {
-        enable = lib.mkEnableOption "Photo Gallery (Life Museum) automated capture and Immich sync daemon";
+        enable = lib.mkEnableOption "automated camera capture and Immich sync daemon";
 
         user = lib.mkOption {
           type = lib.types.nullOr lib.types.str;
@@ -69,8 +72,20 @@
 
         albumName = lib.mkOption {
           type = lib.types.str;
-          default = "Life Museum";
+          default = "Automated Captures";
           description = "Target Immich album name for daily captures";
+        };
+
+        albumDescription = lib.mkOption {
+          type = lib.types.str;
+          default = "Automated camera captures";
+          description = "Description assigned when creating the Immich album";
+        };
+
+        deviceId = lib.mkOption {
+          type = lib.types.str;
+          default = "server-camera";
+          description = "Device identifier reported to Immich for uploaded captures";
         };
 
         cameraType = lib.mkOption {
@@ -279,7 +294,7 @@
         # Photo Gallery Service
         (lib.mkIf cfg.photoGallery.enable {
           photo-gallery = {
-            description = "Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync";
+            description = "Photo Gallery - Automated Camera Capture & Immich Sync";
             wantedBy = ["multi-user.target"];
             after = ["network-online.target" "immich.service"];
             wants = ["network-online.target"];
@@ -300,6 +315,8 @@
               {
                 IMMICH_INSTANCE_URL = cfg.photoGallery.immichUrl;
                 IMMICH_ALBUM_NAME = cfg.photoGallery.albumName;
+                IMMICH_ALBUM_DESCRIPTION = cfg.photoGallery.albumDescription;
+                IMMICH_DEVICE_ID = cfg.photoGallery.deviceId;
                 CAMERA_TYPE = cfg.photoGallery.cameraType;
                 CAMERA_DEVICE = cfg.photoGallery.cameraDevice;
                 CAMERA_RESOLUTION = cfg.photoGallery.cameraResolution;

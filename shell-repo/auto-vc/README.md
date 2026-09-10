@@ -42,9 +42,9 @@ homelab.shellRepo = {
   enable = true;
   autoVc = {
     enable = true;
-    repoPath = "/home/kryisnn/.config/config"; # Target repository to monitor
+    repoPath = "/path/to/config-repository";  # Target repository to monitor
     intervalSeconds = 60;                    # Check frequency
-    user = "kryisnn";
+    user = "operator";
   };
 };
 ```

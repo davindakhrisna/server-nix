@@ -1,6 +1,6 @@
-# Photo Gallery (Life Museum)
+# Photo Gallery
 
-An automated, 24/7 capture daemon for your homelab that takes snapshots from an external camera at a random time each day (or configurable intervals) and automatically syncs them to your self-hosted [Immich](https://immich.app/) instance categorized under the **"Life Museum"** album.
+An automated, 24/7 capture daemon that takes snapshots from an external camera at a random time each day (or configurable intervals) and syncs them to a configurable album in your self-hosted [Immich](https://immich.app/) instance.
 
 Designed to effortlessly preserve candid, authentic everyday moments without manual intervention.
 
@@ -20,7 +20,7 @@ Designed to effortlessly preserve candid, authentic everyday moments without man
   - `random_interval`: Captures after randomized delays between minimum and maximum minutes.
 - 🖼️ **Direct Immich Integration**:
   - Direct REST API communication using `curl` and `jq` (no heavy Docker or NodeJS dependencies required).
-  - Automatically queries and creates the **"Life Museum"** album if it does not already exist.
+  - Automatically queries and creates the configured album if it does not already exist.
   - Uploads the image and attaches it directly into the album.
 - 🔄 **24/7 Auto-Start & Resilience**:
   - Built-in `systemd` user service installer (`--install-service`).
@@ -80,7 +80,8 @@ Key settings in `.env`:
 # Immich URL & API Key (Immich Web UI -> Account Settings -> API Keys)
 IMMICH_INSTANCE_URL="http://192.168.1.100:2283"
 IMMICH_API_KEY="your_api_key_here"
-IMMICH_ALBUM_NAME="Life Museum"
+IMMICH_ALBUM_NAME="Automated Captures"
+IMMICH_ALBUM_DESCRIPTION="Automated camera captures"
 
 # Camera Settings
 CAMERA_TYPE="usb"            # usb | rtsp | http | rpi | custom
@@ -112,13 +113,13 @@ Before running the 24/7 daemon, test your camera and Immich connection:
 ```bash
 ./photo-gallery.sh --test-immich
 ```
-*Validates the API key and ensures the "Life Museum" album exists or creates it.*
+*Validates the API key and ensures the configured album exists or creates it.*
 
 #### C. Manual Capture & Upload
 ```bash
 ./photo-gallery.sh --now
 ```
-*Immediately takes a snapshot, uploads it to Immich, and adds it to the "Life Museum" album.*
+*Immediately takes a snapshot, uploads it to Immich, and adds it to the configured album.*
 
 ---
 
@@ -201,12 +202,12 @@ If you manage your homelab declaratively with NixOS, you can add this service in
 
 ```nix
 systemd.user.services.photo-gallery = {
-  description = "Photo Gallery Life Museum Capture Daemon";
+  description = "Photo Gallery Capture Daemon";
   wantedBy = [ "default.target" ];
   after = [ "network-online.target" ];
   wants = [ "network-online.target" ];
   serviceConfig = {
-    ExecStart = "/home/kris/shell-repo/photo-gallery/photo-gallery.sh --daemon";
+    ExecStart = "/path/to/photo-gallery/photo-gallery.sh --daemon";
     Restart = "always";
     RestartSec = "15s";
   };

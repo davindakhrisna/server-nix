@@ -39,7 +39,7 @@ graph TD
    ```text
    chore(auto-vc): automated backup 2026-09-08 04:30:00
 
-   Automated sync performed by Auto-VC on homelab.
+   Automated sync performed by Auto-VC.
    Modified files:
     M hosts/homelab/default.nix
     A shell-repo/auto-vc/auto-vc.sh
@@ -91,12 +91,12 @@ homelab.shellRepo = {
     # All options below are optional - defaults shown for a single-user host:
     # repoPath defaults to var.flakePath, user defaults to the first normal
     # user account, sshKeyPath defaults to ~/.ssh/id_github_deploy of that user.
-    repoPath = "/home/kryisnn/.config/config"; # Target repository to monitor
+    repoPath = "/path/to/config-repository";  # Target repository to monitor
     branch = "main";                         # Target Git branch
     remote = "origin";                       # Git remote
     intervalSeconds = 60;                    # Frequency of checks (seconds)
-    user = "kryisnn";                        # Override if >1 normal user exists
-    sshKeyPath = "/home/kryisnn/.ssh/id_github_deploy"; # Override deploy key location
+    user = "operator";                       # Override if >1 normal user exists
+    sshKeyPath = "/home/operator/.ssh/id_github_deploy"; # Override deploy key location
     commitPrefix = "chore(auto-vc)";         # Commit message prefix
     pullBeforePush = true;                   # Pull rebase before push
   };
@@ -119,7 +119,7 @@ journalctl -u auto-vc.service -f
 For 24/7 pushing to succeed, ensure your deploy key has **write access**:
 1. Run `./post-install.sh` or generate your key:
    ```bash
-   ssh-keygen -t ed25519 -C "homelab-deploy-24/7" -f ~/.ssh/id_github_deploy -N ""
+   ssh-keygen -t ed25519 -C "$(hostname)-deploy" -f ~/.ssh/id_github_deploy -N ""
    ```
 2. In GitHub: **Repository Settings** -> **Deploy Keys** -> **Add deploy key**:
    - Paste the public key (`~/.ssh/id_github_deploy.pub`).
@@ -127,5 +127,5 @@ For 24/7 pushing to succeed, ensure your deploy key has **write access**:
    - **Check: `[x] Allow write access`**.
 3. Set your git remote to SSH:
    ```bash
-   git remote set-url origin git@github.com:davindakhrisna/server-nixos.git
+   git remote set-url origin git@github.com:<owner>/<repository>.git
    ```

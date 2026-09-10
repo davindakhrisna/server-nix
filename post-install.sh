@@ -2,7 +2,7 @@
 # ==============================================================================
 # NixOS Server Post-Installation & GitHub 24/7 Deploy Key Setup Helper
 # ==============================================================================
-# Run this script after booting into your new NixOS homelab server to:
+# Run this script after booting into your new NixOS server to:
 #  1. Generate and register a dedicated 24/7 GitHub Deploy Key (Write Access)
 #  2. Test GitHub SSH authentication
 #  3. Switch git remote to SSH (git@github.com:...)
@@ -22,7 +22,7 @@ NC='\033[0m' # No Color
 
 SSH_DIR="$HOME/.ssh"
 KEY_FILE="$SSH_DIR/id_github_deploy"
-REPO_DEFAULT="davindakhrisna/server-nixos"
+REPO_DEFAULT="${REPO_SLUG:-}"
 # Derive the actual repo from the current checkout's origin, so the script
 # never points the user (or the SSH remote) at a hardcoded repo.
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -30,6 +30,14 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     if [[ -n "$DETECTED_REPO" ]]; then
         REPO_DEFAULT="$DETECTED_REPO"
     fi
+fi
+
+if [[ -z "$REPO_DEFAULT" ]]; then
+    read -rp "GitHub repository (owner/name): " REPO_DEFAULT
+fi
+if [[ ! "$REPO_DEFAULT" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+    echo "Invalid GitHub repository; expected owner/name." >&2
+    exit 1
 fi
 
 echo -e "${BLUE}${BOLD}====================================================${NC}"
@@ -49,7 +57,7 @@ if [[ -f "$KEY_FILE" ]]; then
     echo -e "${YELLOW}Existing deploy key found at:${NC} $KEY_FILE"
 else
     echo -e "${GREEN}==>${NC} Generating new dedicated Ed25519 deploy key..."
-    ssh-keygen -t ed25519 -C "homelab-deploy-24/7" -f "$KEY_FILE" -N ""
+    ssh-keygen -t ed25519 -C "$(hostname)-deploy" -f "$KEY_FILE" -N ""
     chmod 600 "$KEY_FILE"
     chmod 644 "${KEY_FILE}.pub"
     echo -e "${GREEN}✓ Key pair generated successfully.${NC}"
@@ -66,7 +74,7 @@ echo -e "${YELLOW}${BOLD}=======================================================
 echo ""
 echo -e "${BOLD}Steps to add to GitHub:${NC}"
 echo -e "  1. Open: ${CYAN}https://github.com/${REPO_DEFAULT}/settings/keys/new${NC}"
-echo -e "  2. Title: ${BOLD}Homelab Server (24/7 Deploy)${NC}"
+echo -e "  2. Title: ${BOLD}$(hostname) (24/7 Deploy)${NC}"
 echo -e "  3. Key: Paste the green line above"
 echo -e "  4. ${RED}${BOLD}CRITICAL:${NC} Check the box ${BOLD}'Allow write access'${NC} (allows 24/7 git pushes)"
 echo ""
@@ -150,7 +158,7 @@ echo ""
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "${GREEN}${BOLD}   ✓ Post-Installation Setup Complete!              ${NC}"
 echo -e "${BLUE}${BOLD}====================================================${NC}"
-echo -e "Your homelab server is now configured to:"
+echo -e "Your server is now configured to:"
 echo -e "  • Push changes to ${BOLD}${REPO_DEFAULT}${NC} 24/7 without password prompts."
 echo -e "  • Authenticate via dedicated deploy key: ${CYAN}${KEY_FILE}${NC}"
 echo -e "  • Accept secure SSH connections over Tailscale."

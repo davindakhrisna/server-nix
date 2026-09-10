@@ -36,8 +36,7 @@
           settings = {
             global = {
               "workgroup" = "WORKGROUP";
-              "server string" = "Homelab NAS";
-              "netbios name" = "HOMELAB";
+              "server string" = "NixOS file server";
               "security" = "user";
               # Only allow private LAN subnets and Tailscale (100.x.y.z)
               "hosts allow" = "192.168.0.0/16 10.0.0.0/8 172.16.0.0/12 100.64.0.0/10 127.0.0.1 ::1";
@@ -56,7 +55,7 @@
               "force create mode" = "0660";
               "directory mask" = "2770";
               "force directory mode" = "2770";
-              "comment" = "Homelab Shared Storage";
+              "comment" = "Shared Storage";
             };
           };
         };

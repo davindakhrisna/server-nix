@@ -10,7 +10,7 @@ The `shell-repo/` directory in this repository hosts three primary automation da
 
 ```text
 shell-repo/
-├── photo-gallery/       # Life Museum 24/7 automated camera capture & Immich sync
+├── photo-gallery/       # Automated camera capture & Immich sync
 │   ├── photo-gallery.sh
 │   ├── .env.example
 │   └── README.md
@@ -43,7 +43,7 @@ Each script runs as an isolated, self-healing systemd service (`Restart = "alway
 - *See [Auto-VC Guide](auto-vc-guide.md) for full details.*
 
 ### 2. 📸 Photo Gallery (`shell-repo/photo-gallery/`)
-- **Purpose:** Life Museum automated camera capture & Immich synchronization.
+- **Purpose:** Automated camera capture & Immich synchronization.
 - **How it works:** Wakes USB webcams (`/dev/video0`) or RTSP/HTTP streams at randomized intervals during daytime hours, captures high-resolution frames with ffmpeg, and uploads them directly into an Immich album.
 - **Service:** `photo-gallery.service`
 - **Configuration:** Set environment variables or secrets in `/persist/secrets/photo-gallery.env`.
@@ -76,8 +76,8 @@ homelab.shellRepo = {
   customServices = {
     my-backup = {
       enable = true;
-      script = "/home/kryisnn/.config/config/shell-repo/my-script.sh";
-      user = "kryisnn";
+      script = "/path/to/config/shell-repo/my-script.sh";
+      user = "operator";
       environmentFile = "/persist/secrets/my-script.env";
       packages = with pkgs; [ rsync curl jq bash ];
       restartSec = "30s";

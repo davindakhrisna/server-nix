@@ -5,7 +5,7 @@
 # Run this on your POWERFUL machine to pre-build the entire NixOS system
 # closure and export it as a local Nix binary cache onto your Ventoy USB.
 #
-# The homelab server (4GB RAM) can then install from this cache with zero
+# The target server can then install from this cache with zero
 # compilation overhead — just copying pre-built store paths.
 # ==============================================================================
 
@@ -21,7 +21,7 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m' # No Color
 
-HOST_NAME="homelab"
+HOST_NAME=""
 USB_PATH=""
 SKIP_CONFIRM=false
 SKIP_REPO_COPY=false
@@ -33,20 +33,20 @@ ${BOLD}Pre-build the NixOS system closure and export to a Ventoy USB.${NC}
 
 ${BOLD}Options:${NC}
   -u, --usb <path>        Path to Ventoy USB mount (e.g., /run/media/$USER/Ventoy)
-  -H, --host <hostname>   NixOS host configuration to build (default: homelab)
+  -H, --host <hostname>   NixOS host configuration to build (required)
   -y, --yes               Skip confirmation prompts
   --no-repo-copy          Skip copying the flake repository to the USB
   -h, --help              Show this help message
 
 ${BOLD}Examples:${NC}
   # Interactive: prompts for USB path
-  $0
+  $0 --host <host>
 
   # Direct path to Ventoy USB
-  $0 --usb /run/media/$USER/Ventoy
+  $0 --host <host> --usb /run/media/$USER/Ventoy
 
   # Build a specific host config
-  $0 --host homelab --usb /run/media/$USER/Ventoy"
+  $0 --host <host> --usb /run/media/$USER/Ventoy"
     exit 0
 }
 
@@ -79,9 +79,20 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Ensure we're in the repository root
+# Ensure we're in the repository root before checking host inventory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+if [[ -z "$HOST_NAME" ]]; then
+    echo "Error: --host is required; select an explicitly personalized host configuration." >&2
+    exit 1
+fi
+
+if [[ -f "hosts/$HOST_NAME/_local.example.nix" && ! -f "hosts/$HOST_NAME/_local.nix" ]]; then
+    echo "Error: hosts/$HOST_NAME/_local.nix is missing." >&2
+    echo "Copy _local.example.nix to _local.nix and personalize it before building." >&2
+    exit 1
+fi
 
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "${BLUE}${BOLD}   📦 NixOS Pre-Build & USB Cache Exporter          ${NC}"
@@ -190,7 +201,7 @@ echo -e "  ${DIM}This may take a while on first run (downloading + compiling).${
 echo -e "  ${DIM}Subsequent runs with no config changes will be near-instant.${NC}"
 echo ""
 
-BUILD_TARGET=".#nixosConfigurations.${HOST_NAME}.config.system.build.toplevel"
+BUILD_TARGET="path:.#nixosConfigurations.${HOST_NAME}.config.system.build.toplevel"
 
 nix build "$BUILD_TARGET" --show-trace 2>&1 | while IFS= read -r line; do
     echo -e "  ${DIM}${line}${NC}"
@@ -290,13 +301,13 @@ if [[ "$SKIP_REPO_COPY" != true ]]; then
 echo -e "  Flake Repo:    ${BOLD}${REPO_DIR}${NC}"
 fi
 echo ""
-echo -e "${BOLD}Next steps on homelab (4GB RAM):${NC}"
-echo -e "  1. Boot your homelab from the Ventoy USB (NixOS minimal ISO)"
+echo -e "${BOLD}Next steps on the target server:${NC}"
+echo -e "  1. Boot the target server from the Ventoy USB (NixOS minimal ISO)"
 echo -e "  2. Mount the Ventoy data partition (use /mnt-usb, NOT /mnt/usb):"
 echo -e "     ${CYAN}# Note: Disko mounts the target OS to /mnt, so we use /mnt-usb to avoid mount shadowing!${NC}"
 echo -e "     ${BOLD}lsblk -f${NC}   ${DIM}# Identify Ventoy partition (usually the large exFAT/NTFS one)${NC}"
 echo -e "     ${BOLD}mkdir -p /mnt-usb && mount /dev/sdX1 /mnt-usb${NC}"
 echo -e "  3. Run the installer from the USB copy:"
 echo -e "     ${BOLD}cd /mnt-usb/server-nixos${NC}"
-echo -e "     ${BOLD}sudo ./install.sh${NC}   ${DIM}(auto-detects cache at /mnt-usb/nix-cache)${NC}"
+echo -e "     ${BOLD}sudo ./install.sh --host ${HOST_NAME}${NC}   ${DIM}(auto-detects cache at /mnt-usb/nix-cache)${NC}"
 echo -e "${BLUE}${BOLD}====================================================${NC}"

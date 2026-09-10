@@ -1,9 +1,9 @@
-# ❄️ NixOS Server - Modular Homelab
+# ❄️ NixOS Server - Reusable Homelab
 
 [![NixOS](https://img.shields.io/badge/NixOS-26.05-blue.svg?logo=nixos&logoColor=white)](https://nixos.org)
 [![Flake-Parts](https://img.shields.io/badge/Architecture-Flake--Parts-orange.svg)](https://github.com/hercules-ci/flake-parts)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Personal%20Homelab-blue.svg)](docs/operations.md)
+[![Status](https://img.shields.io/badge/Status-Reusable%20Config-blue.svg)](docs/operations.md)
 
 A clean, declarative, and robust multi-host NixOS server configuration built with **[flake-parts](https://github.com/hercules-ci/flake-parts)** and **[import-tree](https://github.com/denful/import-tree)**. Optimized for 24/7 homelab operation, AI workloads, automated git synchronization, and headless laptop deployments.
 
@@ -20,14 +20,14 @@ graph TD
     end
 
     subgraph System Services
-        NM --> Cloud[Personal Cloud: Immich, Vaultwarden, Obsidian, Samba]
+        NM --> Cloud[Self-hosted Cloud: Immich, Vaultwarden, Obsidian, Samba]
         NM --> AI[AI & Automation: n8n, OpenHands, 9Router, Headroom]
         NM --> SR[Shell-Repo Runner]
     end
 
     subgraph Shell-Repo Daemons
         SR --> AVC[Auto-VC: 24/7 Git Sync]
-        SR --> PG[Photo Gallery: Life Museum]
+        SR --> PG[Photo Gallery: Automated Capture]
         SR --> WANE[WANE Watcher: Error Collector]
     end
 
@@ -98,10 +98,10 @@ Web backends are loopback-only. See the [Services Guide](docs/services.md) and
 
 ```bash
 # 1. Bare-metal Wipe & Install (from Live USB)
-sudo ./install.sh --disk /dev/nvme0n1 --host homelab
+sudo ./install.sh --disk /dev/nvme0n1 --host <host>
 
 # 2. Remote Deployment over SSH (nixos-anywhere)
-./install.sh --mode remote --host homelab --target root@<homelab-ip> --disk /dev/sda
+./install.sh --mode remote --host <host> --target root@<server-ip> --disk /dev/sda
 
 # 3. Post-Installation Setup (GitHub 24/7 Deploy Key & Tailscale)
 ./post-install.sh
@@ -111,7 +111,7 @@ wane --show 20 desc all
 wane --status
 
 # 5. Rebuild System after Config Changes
-nh os switch
+nh os switch path:.
 
 # 6. Check & Lint Nix Flake
 nix flake check --impure
@@ -122,11 +122,16 @@ nix run nixpkgs#deadnix -- .
 
 ---
 
-## 🔒 Private Repository Recommendation
+## 🔒 Local Inventory
 
-Because this repository contains your personal homelab configuration—including hostnames, user accounts (`kryisnn`), authorized SSH keys, Tailscale networks, and 24/7 automated git push daemons—it is strongly recommended to **fork or host this entire repository as a private Git repository** on GitHub, GitLab, or your self-hosted Forgejo instance.
+The tracked repository contains no deployment identity. Before building the
+`homelab` host, copy `hosts/homelab/_local.example.nix` to
+`hosts/homelab/_local.nix` and set the hostname, primary user/UID, public SSH keys,
+Git identity, Tailscale identities, location and machine-specific paths. The
+local inventory is ignored by Git. Use a `path:` flake reference so Nix includes
+that ignored file.
 
-To push changes to your private repository 24/7 without exposing personal credentials, run:
+To configure a repository-specific deploy key after installation, run:
 ```bash
 ./post-install.sh
 ```

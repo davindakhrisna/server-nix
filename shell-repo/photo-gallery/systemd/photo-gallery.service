@@ -1,5 +1,5 @@
 [Unit]
-Description=Photo Gallery - Life Museum 24/7 Random Capture & Immich Sync
+Description=Photo Gallery - Automated Camera Capture & Immich Sync
 After=network-online.target
 Wants=network-online.target
 

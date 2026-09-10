@@ -2,7 +2,14 @@
   self,
   inputs,
   ...
-}: {
+}: let
+  publicDefaults = import ./_local.example.nix;
+  localOverrides =
+    if builtins.pathExists ./_local.nix
+    then import ./_local.nix
+    else {};
+  host = publicDefaults // localOverrides;
+in {
   flake.nixosConfigurations.homelab = inputs.nixpkgs.lib.nixosSystem {
     system = "x86_64-linux";
     specialArgs = {inherit inputs self;};
@@ -27,14 +34,15 @@
       self.nixosModules.system
 
       # Host-specific Configuration
-      ({pkgs, ...}: {
-        networking.hostName = "homelab";
-        time.timeZone = "Asia/Jakarta";
+      ({lib, pkgs, ...}: {
+        networking.hostName = host.hostName;
+        time.timeZone = host.timeZone;
         i18n.defaultLocale = "en_US.UTF-8";
 
         # User Account (System-level)
-        users.users.kryisnn = {
+        users.users.${host.primaryUser} = {
           isNormalUser = true;
+          uid = host.primaryUid;
           shell = pkgs.zsh;
           extraGroups = [
             "wheel"
@@ -42,9 +50,7 @@
             "docker"
             "video"
           ];
-          openssh.authorizedKeys.keys = [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJH9jDDmY066+eqWJq6HZtJuhysL3CAL29HsSM1rtSou kris@windows"
-          ];
+          openssh.authorizedKeys.keys = host.sshAuthorizedKeys;
         };
 
         # Homelab Services Suite
@@ -52,18 +58,22 @@
           lowMemory = true;
           backup = {
             enable = true;
-            repository = "/persists/secret";
+            repository = host.backupRepository;
             # A folder on the system disk does not protect against disk failure.
             # Set requiredMount when using an external backup disk.
           };
           ssh = {
             enable = true;
-            tailscaleSshUsers = ["arpeggio.gns@gmail.com"];
-            tailscaleSshTargetUser = "kryisnn";
+            tailscaleSshUsers = host.tailscaleSshUsers;
+            tailscaleSshTargetUser =
+              if host.tailscaleSshUsers == []
+              then null
+              else host.primaryUser;
           };
           immich.enable = true;
           glance = {
             enable = true;
+            weatherLocation = host.weatherLocation;
             bookmarks = [
               {
                 title = "Homelab Services";
@@ -186,17 +196,19 @@
             photoGallery = {
               enable = true;
               cameraType = "usb";
-              cameraDevice = "/dev/video2";
+              cameraDevice = host.cameraDevice;
+              albumName = host.photoAlbumName;
+              albumDescription = host.photoAlbumDescription;
+              deviceId = host.photoDeviceId;
               environmentFile = "/persist/secrets/photo-gallery.env";
             };
             autoVc = {
-              enable = true;
-              repoPath = "/home/kryisnn/.config/config";
+              enable = host.autoVcEnable;
+              repoPath = host.repoPath;
               intervalSeconds = 60;
             };
             waneWatcher = {
               enable = true;
-              logFile = "/home/kryisnn/.config/config/wane-log";
             };
           };
 
@@ -225,19 +237,23 @@
 
         # Hardware & Flake Path
         var = {
-          flakePath = "/home/kryisnn/.config/config"; # Path to your flake repository
+          primaryUser = host.primaryUser;
+          flakePath = host.flakePath;
           cpu = "intel";
           gpu = null; # Set to "nvidia", "amd", or "intel" if laptop has dedicated GPU
           dualBoot.enable = false;
         };
 
         # User Configuration (Home Manager level)
-        home-manager.users.kryisnn = {...}: {
+        home-manager.users.${host.primaryUser} = {...}: {
           imports = with self.homeModules; [
             home-manager
             shell
             dev
           ];
+          programs.git.settings.user = lib.mkIf (host.git.name != null && host.git.email != null) {
+            inherit (host.git) name email;
+          };
         };
 
         system.stateVersion = "26.05";

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Photo Gallery (Life Museum)
+# Photo Gallery
 # 24/7 Automated Camera Capture & Immich Gallery Sync
 # ==============================================================================
 
@@ -24,8 +24,9 @@ fi
 # ------------------------------------------------------------------------------
 IMMICH_INSTANCE_URL="${IMMICH_INSTANCE_URL:-}"
 IMMICH_API_KEY="${IMMICH_API_KEY:-}"
-IMMICH_ALBUM_NAME="${IMMICH_ALBUM_NAME:-Life Museum}"
-IMMICH_DEVICE_ID="${IMMICH_DEVICE_ID:-homelab-camera}"
+IMMICH_ALBUM_NAME="${IMMICH_ALBUM_NAME:-Automated Captures}"
+IMMICH_ALBUM_DESCRIPTION="${IMMICH_ALBUM_DESCRIPTION:-Automated camera captures}"
+IMMICH_DEVICE_ID="${IMMICH_DEVICE_ID:-server-camera}"
 
 CAMERA_TYPE="${CAMERA_TYPE:-usb}"
 CAMERA_DEVICE="${CAMERA_DEVICE:-/dev/video0}"
@@ -271,7 +272,7 @@ immich_get_or_create_album() {
     local payload
     payload=$(jq -n \
         --arg name "$IMMICH_ALBUM_NAME" \
-        --arg desc "Life Museum - Daily random homelab captures" \
+        --arg desc "$IMMICH_ALBUM_DESCRIPTION" \
         '{"albumName": $name, "description": $desc}')
 
     local create_resp
@@ -349,7 +350,7 @@ immich_upload_and_index() {
 
     log "Asset indexed successfully in Immich (Asset ID: $asset_id)"
 
-    # Add asset to the "Life Museum" album
+    # Add the asset to the configured album.
     local album_id
     album_id=$(immich_get_or_create_album)
     if [ -n "$album_id" ]; then
@@ -367,7 +368,7 @@ immich_upload_and_index() {
         local put_code
         put_code=$(echo "$put_resp" | tail -n1)
         if [[ "$put_code" == "200" ]]; then
-            log "Photo successfully added to Life Museum album."
+            log "Photo successfully added to '$IMMICH_ALBUM_NAME'."
         else
             log_warn "Asset uploaded, but adding to album returned HTTP $put_code"
             return 1
@@ -425,7 +426,7 @@ run_capture_and_upload() {
     retry_pending_uploads || log_warn "Previous captures remain queued for upload."
     local timestamp
     timestamp=$(date '+%Y%m%d_%H%M%S_%N')
-    local dest_file="$STORAGE_DIR/life_museum_${timestamp}.jpg"
+    local dest_file="$STORAGE_DIR/capture_${timestamp}.jpg"
 
     if ! capture_photo "$dest_file"; then
         log_error "Capture workflow aborted due to camera error."
@@ -568,7 +569,7 @@ get_next_sleep_seconds() {
 
 run_daemon() {
     log "========================================================"
-    log "Starting Photo Gallery Life Museum Daemon (24/7 Mode)"
+    log "Starting Photo Gallery daemon (24/7 mode)"
     log "Mode: $SCHEDULE_MODE | Camera: $CAMERA_TYPE | Album: $IMMICH_ALBUM_NAME"
     log "========================================================"
 
@@ -677,7 +678,7 @@ test_camera_only() {
 
 show_help() {
     cat << EOF
-Photo Gallery (Life Museum) - 24/7 Homelab Camera Capture & Immich Sync
+Photo Gallery - Automated Camera Capture & Immich Sync
 
 Usage: $0 [OPTION]
 

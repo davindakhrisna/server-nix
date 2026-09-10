@@ -7,6 +7,12 @@
     ...
   }: {
     options.var = {
+      primaryUser = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Primary human account used by installation and user-scoped services";
+      };
+
       flakePath = lib.mkOption {
         type = lib.types.str;
         default = "/etc/nixos";

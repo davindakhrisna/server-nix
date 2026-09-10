@@ -13,7 +13,7 @@
       availableKernelModules = ["xhci_pci" "nvme" "usbhid"];
       kernelModules = [];
     };
-    kernelModules = ["kvm-intel"];
+    kernelModules = [];
   };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

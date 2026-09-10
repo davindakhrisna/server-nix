@@ -223,10 +223,10 @@ nix run nixpkgs#alejandra -- .
 nix run nixpkgs#statix -- check .
 
 # 2. Evaluate system derivation
-nix eval .#nixosConfigurations.homelab.config.system.build.toplevel.drvPath
+nix eval path:.#nixosConfigurations.homelab.config.system.build.toplevel.drvPath
 
 # 3. Dry build
-nix build .#nixosConfigurations.homelab.config.system.build.toplevel --dry-run
+nix build path:.#nixosConfigurations.homelab.config.system.build.toplevel --dry-run
 
 # 4. Apply changes
 nh os switch

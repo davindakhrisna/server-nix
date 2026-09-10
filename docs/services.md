@@ -15,10 +15,10 @@ has a root URL; path prefixes such as `/immich` are not used.
 | Headroom | `https://<fqdn>:8448/` | `/var/lib/headroom` | `/persist/secrets/headroom.env` |
 | Samba NAS | `smb://<server-ip>/nas` | `/srv/nas` | Local account enrolled with `smbpasswd -a`; no guests |
 | OpenHands | Disabled | Existing `/var/lib/openhands` data retained | Use an isolated VM or machine |
-| Auto-VC | Background daemon | `/home/kryisnn/.config/config` | Dedicated GitHub deploy key; unchanged |
-| WANE | `wane` CLI | `/home/kryisnn/.config/config/wane-log` | Local account |
+| Auto-VC | Background daemon | Configured repository path | Dedicated GitHub deploy key |
+| WANE | `wane` CLI | `/var/log/wane/wane-log` | Local system log |
 | Photo Gallery | Background capture and upload | `/var/lib/photo-gallery` | Real Immich API key in `/persist/secrets/photo-gallery.env` |
-| Restic backup | Daily around 03:00 | `/persists/secret` destination | `/persist/secrets/restic-password` |
+| Restic backup | Daily around 03:00 | Configured repository | `/persist/secrets/restic-password` |
 
 SSH is available only through `tailscale0` and the Tailscale SSH policy; authenticated LAN NAS access remains available. Web backends
 are not reachable directly through their old LAN HTTP ports. Tailnet access is

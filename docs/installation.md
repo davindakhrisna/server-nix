@@ -52,8 +52,16 @@ Use this method when booting the target server from a standard NixOS Minimal ISO
 
 ### Step 3: Clone Configuration
 ```bash
-git clone https://github.com/davindakhrisna/server-nixos.git /tmp/config
+git clone <repository-url> /tmp/config
 cd /tmp/config
+```
+
+Create the machine-local inventory before building. It is intentionally ignored
+by Git:
+
+```bash
+cp hosts/homelab/_local.example.nix hosts/homelab/_local.nix
+$EDITOR hosts/homelab/_local.nix
 ```
 
 ### Step 4: Identify Target Disk
@@ -77,7 +85,7 @@ The script will:
 2. Partition the disk with Disko (ESP `/boot`, Swap, Btrfs subvolumes: `@`, `@home`, `@nix`, `@persist`, `@log`).
 3. Activate swap immediately and route `TMPDIR` to disk.
 4. Install NixOS to `/mnt`.
-5. Copy the configuration repository into `/mnt/home/<user>/.config/config` (the username is derived from the selected host's `users.users.<name>` definition) and symlink `/etc/nixos` to it.
+5. Copy the configuration repository into `/mnt/home/<user>/.config/config` (the username and ownership are read from the evaluated host configuration) and symlink `/etc/nixos` to it.
 6. Provision missing service secrets into `/mnt/persist/secrets/` without displaying or overwriting them. Photo Gallery needs a real API key after creating your Immich account.
 7. Prompt you to enter a password for the primary user via `nixos-enter`.
 8. Prompt to reboot into your new installation.
@@ -114,7 +122,7 @@ verify a backup restore. OpenHands is disabled on the main homelab host.
 
 ## 🔑 Post-Installation Setup (`post-install.sh`)
 
-After the server reboots and you log in as the primary user (e.g. `kryisnn`):
+After the server reboots and you log in as the configured primary user:
 
 ```bash
 cd ~/.config/config

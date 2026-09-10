@@ -45,6 +45,11 @@
         default = 8080;
         description = "Port on which Glance runs";
       };
+      weatherLocation = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Optional city and country displayed by the weather widget";
+      };
       bookmarks = lib.mkOption {
         default = [];
         type = lib.types.listOf (lib.types.submodule {
@@ -119,23 +124,26 @@
               columns = [
                 {
                   size = "small";
-                  widgets = [
-                    {
-                      type = "clock";
-                      hour-format = "24h";
-                      timezones = [{timezone = "Asia/Jakarta";}];
-                    }
-                    {
+                  widgets =
+                    [
+                      {
+                        type = "clock";
+                        hour-format = "24h";
+                        timezones = [{timezone = config.time.timeZone;}];
+                      }
+                    ]
+                    ++ lib.optional (cfg.weatherLocation != null) {
                       type = "weather";
-                      location = "Surabaya, Indonesia";
+                      location = cfg.weatherLocation;
                       units = "metric";
                       hour-format = "24h";
                     }
-                    {
-                      type = "server-stats";
-                      mountpoints = ["/"];
-                    }
-                  ];
+                    ++ [
+                      {
+                        type = "server-stats";
+                        mountpoints = ["/"];
+                      }
+                    ];
                 }
                 {
                   size = "full";

@@ -184,7 +184,7 @@ run_sync_cycle() {
         # Build commit message
         commit_msg="${COMMIT_PREFIX}: automated backup ${timestamp}
 
-Automated sync performed by Auto-VC on homelab.
+Automated sync performed by Auto-VC.
 Modified files:
 ${changed_files}"
 
