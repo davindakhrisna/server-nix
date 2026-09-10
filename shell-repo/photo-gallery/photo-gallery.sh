@@ -57,7 +57,7 @@ fi
 log() {
     local msg
     msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
-    echo "$msg"
+    echo "$msg" >&2
     if [ -n "$LOG_FILE" ]; then
         mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null
         echo "$msg" >> "$LOG_FILE"
