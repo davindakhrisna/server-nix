@@ -34,6 +34,12 @@ if [[ ! "$MAX_LOG_SIZE_MB" =~ ^[1-9][0-9]*$ ]]; then
     exit 1
 fi
 
+# Daily-clean state (persists across reboots; kept in /var/lib so it never
+# pollutes the watched repo that lives next to the log file)
+WANE_STATE_DIR="${WANE_STATE_DIR:-/var/lib/wane}"
+WANE_LAST_ENTRY_FILE="$WANE_STATE_DIR/last-entry-day"
+WANE_LAST_CLEAN_FILE="$WANE_STATE_DIR/last-clean-day"
+
 # Check during the live stream, not after journalctl (which normally never exits).
 append_log_line() {
     local line="$1" size max_bytes=$((MAX_LOG_SIZE_MB * 1024 * 1024))
@@ -46,6 +52,7 @@ append_log_line() {
         mv -f "${LOG_FILE}.tmp" "$LOG_FILE" || return 1
     fi
     printf '%s\n' "$line" >> "$LOG_FILE"
+    date '+%Y-%m-%d' > "$WANE_LAST_ENTRY_FILE" 2>/dev/null || true
 }
 
 # Colors
@@ -296,18 +303,40 @@ cmd_daemon() {
         ' | while IFS= read -r line; do append_log_line "$line"; done
     fi
 
+    # Daily-clean marker: on each wakeup, if the current day has had no
+    # warning/error entries yet, record a single Clean line. auto-vc picks the
+    # wane-log up into the repo, so a quiet day still produces a daily commit.
+    mark_clean_day() {
+        local today last_entry last_clean
+        today=$(date '+%Y-%m-%d')
+        last_entry=""
+        last_clean=""
+        [ -f "$WANE_LAST_ENTRY_FILE" ] && last_entry=$(cat "$WANE_LAST_ENTRY_FILE" 2>/dev/null)
+        [ -f "$WANE_LAST_CLEAN_FILE" ] && last_clean=$(cat "$WANE_LAST_CLEAN_FILE" 2>/dev/null)
+        if [ "$today" != "$last_entry" ] && [ "$today" != "$last_clean" ]; then
+            append_log_line "[$(date '+%Y-%m-%d %H:%M:%S')] [CLEAN] [system] Clean - no warnings or errors today"
+            date '+%Y-%m-%d' > "$WANE_LAST_CLEAN_FILE" 2>/dev/null || true
+        fi
+    }
+
+    mkdir -p "$WANE_STATE_DIR"
+
     # Continuous streaming loop from journald
     while $RUNNING; do
         # Stream priorities 0 through 4 (emerg, alert, crit, err, warning) in real time.
         # Append per-line instead of holding one open fd: if the log file is
         # deleted or rotated out from under the daemon, writes would otherwise
         # keep going into the unlinked inode forever.
-        journalctl -f -p 0..4 -o json -n 0 2>/dev/null | jq --unbuffered -r '
+        # timeout 3600 wakes the loop hourly so mark_clean_day can run even on
+        # completely quiet days (journalctl -f never exits on its own).
+        timeout 3600 journalctl -f -p 0..4 -o json -n 0 2>/dev/null | jq --unbuffered -r '
             (if (.PRIORITY | tonumber) <= 3 then "ERROR" else "WARN" end) as $type |
             "[\((.__REALTIME_TIMESTAMP | tonumber / 1000000 | strftime("%Y-%m-%d %H:%M:%S")))] [\($type)] [\(._SYSTEMD_UNIT // .SYSLOG_IDENTIFIER // "system")] \(.MESSAGE)"
         ' | while IFS= read -r line; do
             append_log_line "$line"
         done || true
+
+        mark_clean_day
 
         sleep 2
     done
