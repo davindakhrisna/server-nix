@@ -7,6 +7,20 @@ Keep an SSH session open, then use `nh os switch path:.`. This repository update
 does not itself change a running server. The `path:` reference is required when
 the host uses the ignored `_local.nix` inventory.
 
+If `_local.nix` is absent, the `homelab` output is intentionally unavailable.
+This prevents a rebuild from replacing the real administrator with template
+identity values.
+
+If an activation was attempted without the inventory, do not close the active
+SSH session. Re-activate the current booted generation first:
+
+```bash
+sudo /run/current-system/bin/switch-to-configuration switch
+```
+
+Then restore `_local.nix`, clear any stale failed backup state, and build with
+`path:.` before switching again.
+
 Web backends now bind to loopback. Their old LAN HTTP addresses stop working.
 OpenHands is disabled, and the dashboard no longer has Docker engine access.
 Auto-VC and its repository/log destination are unchanged.
@@ -31,6 +45,25 @@ Log in with `sudo tailscale up --ssh`. Enable MagicDNS and HTTPS certificates in
 the Tailscale admin console, then run `sudo systemctl restart tailscale-serve`.
 Use `tailscale serve status` to find the exact hostname. Use the full
 `<host>.<tailnet>.ts.net` hostname, not the short host name, for valid TLS.
+
+### Remote 9Router OAuth callbacks
+
+9Router receives its public origin from Tailscale Serve as
+`https://<tailscale-hostname>:8447`. OAuth integrations that honor the public
+origin return there automatically. Some desktop-style providers use fixed
+loopback callbacks instead. From the browser device, keep the matching tunnel
+open while authenticating:
+
+```bash
+# Codex callback
+ssh -N -L 1455:127.0.0.1:1455 <target-user>@<tailscale-hostname>
+
+# xAI callback, only when connecting xAI
+ssh -N -L 56121:127.0.0.1:56121 <target-user>@<tailscale-hostname>
+```
+
+HTTP is expected for these loopback-only callback URIs; the SSH connection
+protects the traffic between devices over Tailscale.
 
 | Application | HTTPS port | Backend (loopback only) |
 |---|---:|---:|

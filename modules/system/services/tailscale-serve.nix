@@ -9,6 +9,7 @@
     publicPort = backend: lib.findFirst (port: cfg.routes.${port} == backend) null (builtins.attrNames cfg.routes);
     n8nPort = publicPort config.homelab.n8n.port;
     vaultPort = publicPort config.homelab.vaultwarden.port;
+    nineRouterPort = publicPort config.homelab.nineRouter.port;
   in {
     options.homelab.tailscaleServe = {
       enable = lib.mkEnableOption "Tailscale Serve HTTPS reverse proxy with declarative routes";
@@ -90,6 +91,9 @@
           + lib.optionalString (vaultPort != null) ''
             printf 'DOMAIN=https://%s:${vaultPort}\n' "$dns_name" | update_env vaultwarden.env
           ''
+          + lib.optionalString (nineRouterPort != null) ''
+            printf 'BASE_URL=https://%s:${nineRouterPort}\nNEXT_PUBLIC_BASE_URL=https://%s:${nineRouterPort}\nAUTH_COOKIE_SECURE=true\n' "$dns_name" "$dns_name" | update_env nine-router.env
+          ''
           + ''
             # Pipeline functions run in subshells; refresh these small services
             # whenever routes are explicitly reapplied (boot/rebuild/restart).
@@ -97,6 +101,7 @@
               lib.optional config.homelab.glance.enable "glance.service"
               ++ lib.optional config.homelab.n8n.enable "n8n.service"
               ++ lib.optional config.homelab.vaultwarden.enable "vaultwarden.service"
+              ++ lib.optional config.homelab.nineRouter.enable "docker-nine-router.service"
             )}
             tailscale serve status
           '';

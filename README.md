@@ -114,7 +114,7 @@ wane --status
 nh os switch path:.
 
 # 6. Check & Lint Nix Flake
-nix flake check --impure
+nix flake check --impure path:.
 nix run nixpkgs#alejandra -- .
 nix run nixpkgs#statix -- check .
 nix run nixpkgs#deadnix -- .
@@ -128,8 +128,9 @@ The tracked repository contains no deployment identity. Before building the
 `homelab` host, copy `hosts/homelab/_local.example.nix` to
 `hosts/homelab/_local.nix` and set the hostname, primary user/UID, public SSH keys,
 Git identity, Tailscale identities, location and machine-specific paths. The
-local inventory is ignored by Git. Use a `path:` flake reference so Nix includes
-that ignored file.
+local inventory is ignored by Git. Without it, the `homelab` output is omitted
+instead of falling back to a generic user. Use a `path:` flake reference so Nix
+includes that ignored file.
 
 To configure a repository-specific deploy key after installation, run:
 ```bash

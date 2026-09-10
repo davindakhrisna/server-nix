@@ -42,7 +42,11 @@ choice; running CouchDB alone does not enable it.
 Glance uses HTTP health checks and does not have Docker socket access.
 OpenHands is disabled because Docker engine control belongs on an isolated host.
 9Router and Headroom use immutable image digests and loopback port bindings.
+Tailscale Serve injects 9Router's `BASE_URL`, `NEXT_PUBLIC_BASE_URL` and
+secure-cookie setting from its runtime `.ts.net` HTTPS origin.
 Their state persists in host directories independently of container replacement.
+Providers with a fixed localhost OAuth callback still need the Tailscale SSH
+port-forward documented in [Operations and migration](operations.md).
 
 Daily encrypted backups capture consistent Btrfs snapshots of application data,
 NAS files, home directories and secrets. Local snapshots and a local Restic

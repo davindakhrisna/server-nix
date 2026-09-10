@@ -33,6 +33,9 @@ in
   assert c.services.samba.settings.nas."guest ok" == "no";
   assert c.services.samba.settings.nas."path" == "/srv/nas";
   assert c.homelab.tailscaleServe.routes."8443" == 2283;
+  assert c.homelab.tailscaleServe.routes."8447" == c.homelab.nineRouter.port;
+  assert builtins.elem "/run/homelab-urls/nine-router.env" c.virtualisation.oci-containers.containers.nine-router.environmentFiles;
+  assert builtins.elem "tailscale-serve.service" c.systemd.services.docker-nine-router.requires;
   assert !(builtins.hasAttr "8449" c.homelab.tailscaleServe.routes);
   assert !(builtins.hasAttr "glance-dashboard-data" c.systemd.services);
   assert c.homelab.glance.monitoredServices != [];

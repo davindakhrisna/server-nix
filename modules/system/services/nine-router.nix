@@ -39,6 +39,12 @@
         description = "Path to environment file containing secrets or API tokens";
       };
 
+      publicEnvironmentFile = lib.mkOption {
+        type = lib.types.nullOr (lib.types.either lib.types.path lib.types.str);
+        default = null;
+        description = "Runtime-generated environment file containing the public HTTPS origin";
+      };
+
       extraEnvironment = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
         default = {};
@@ -70,8 +76,15 @@
               PORT = "20128";
             }
             // cfg.extraEnvironment;
-          environmentFiles = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+          environmentFiles =
+            lib.optional (cfg.environmentFile != null) cfg.environmentFile
+            ++ lib.optional (cfg.publicEnvironmentFile != null) cfg.publicEnvironmentFile;
         };
+      };
+
+      systemd.services.docker-nine-router = lib.mkIf (cfg.publicEnvironmentFile != null) {
+        requires = ["tailscale-serve.service"];
+        after = ["tailscale-serve.service"];
       };
 
       networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [cfg.port];
