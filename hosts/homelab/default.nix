@@ -96,10 +96,12 @@
                   }
                   {
                     title = "9Router";
+                    icon = "/assets/9router.svg";
                     backendPort = 20128;
                   }
                   {
                     title = "Headroom";
+                    icon = "/assets/headroom.svg";
                     backendPort = 8787;
                   }
                 ];
@@ -139,13 +141,13 @@
               }
               {
                 title = "9Router";
-                icon = "mdi:router-wireless";
+                icon = "/assets/9router.svg";
                 backendPort = 20128;
                 checkUrl = "http://127.0.0.1:20128";
               }
               {
                 title = "Headroom";
-                icon = "mdi:brain";
+                icon = "/assets/headroom.svg";
                 backendPort = 8787;
                 checkUrl = "http://127.0.0.1:8787/health";
               }

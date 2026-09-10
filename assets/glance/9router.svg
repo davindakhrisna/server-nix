@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">9Router</title>
+  <g fill="none" stroke="#e5b95f" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+    <circle cx="25" cy="22" r="12"/>
+    <path d="M37 22v15c0 10-7 17-17 17h-5"/>
+    <path d="M37 34h13v-9M37 43h13v9"/>
+  </g>
+  <g fill="#e5b95f">
+    <rect x="47" y="18" width="7" height="7"/>
+    <rect x="47" y="49" width="7" height="7"/>
+  </g>
+</svg>

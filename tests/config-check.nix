@@ -15,8 +15,10 @@ in
   assert builtins.elem "--ssh" c.services.tailscale.extraSetFlags;
   assert c.homelab.ssh.tailscaleSshUsers == ["arpeggio.gns@gmail.com"];
   assert c.homelab.ssh.tailscaleSshTargetUser == "kryisnn";
-  assert !(builtins.hasAttr "theme" c.services.glance.settings);
+  assert c.services.glance.settings.theme.background-color == "240 8 5";
+  assert c.services.glance.settings.theme.custom-css-file == "/assets/user.css";
   assert builtins.length (builtins.elemAt c.services.glance.settings.pages 0).columns == 3;
+  assert (builtins.elemAt (builtins.elemAt (builtins.elemAt c.services.glance.settings.pages 0).columns 0).widgets 1).location == "Surabaya, Indonesia";
   assert builtins.all (
     container:
       builtins.match ".+@sha256:[0-9a-f]{64}" container.image

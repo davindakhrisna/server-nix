@@ -105,6 +105,13 @@
           server = {
             inherit (cfg) port;
             host = "127.0.0.1";
+            assets-path = ../../../assets/glance;
+          };
+          theme = {
+            # Preserve Glance's default dark palette while lowering only the
+            # background lightness (the upstream default is "240 8 9").
+            background-color = "240 8 5";
+            custom-css-file = "/assets/user.css";
           };
           pages = [
             {
@@ -117,6 +124,12 @@
                       type = "clock";
                       hour-format = "24h";
                       timezones = [{timezone = "Asia/Jakarta";}];
+                    }
+                    {
+                      type = "weather";
+                      location = "Surabaya, Indonesia";
+                      units = "metric";
+                      hour-format = "24h";
                     }
                     {
                       type = "server-stats";
