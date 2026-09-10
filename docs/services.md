@@ -47,6 +47,8 @@ secure-cookie setting from its runtime `.ts.net` HTTPS origin.
 Their state persists in host directories independently of container replacement.
 Providers with a fixed localhost OAuth callback still need the Tailscale SSH
 port-forward documented in [Operations and migration](operations.md).
+The homelab profile uses host networking for this container while binding the
+main server to `127.0.0.1`, so callback listeners remain local-only.
 
 Daily encrypted backups capture consistent Btrfs snapshots of application data,
 NAS files, home directories and secrets. Local snapshots and a local Restic

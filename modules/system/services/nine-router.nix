@@ -33,6 +33,12 @@
         description = "Open port in firewall";
       };
 
+      hostNetwork = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Use host networking while keeping 9Router bound to loopback, allowing fixed OAuth callback listeners to be reached through SSH tunnels";
+      };
+
       environmentFile = lib.mkOption {
         type = lib.types.nullOr (lib.types.either lib.types.path lib.types.str);
         default = null;
@@ -64,9 +70,8 @@
         containers.nine-router = {
           inherit (cfg) image;
           autoStart = true;
-          ports = [
-            "127.0.0.1:${toString cfg.port}:20128"
-          ];
+          ports = lib.optional (!cfg.hostNetwork) "127.0.0.1:${toString cfg.port}:20128";
+          extraOptions = lib.optional cfg.hostNetwork "--network=host";
           volumes = [
             "${toString cfg.dataDir}:/app/data"
           ];
@@ -74,6 +79,10 @@
             {
               DATA_DIR = "/app/data";
               PORT = "20128";
+              HOSTNAME =
+                if cfg.hostNetwork
+                then "127.0.0.1"
+                else "0.0.0.0";
             }
             // cfg.extraEnvironment;
           environmentFiles =

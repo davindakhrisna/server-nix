@@ -232,6 +232,7 @@ in {
             };
             nineRouter = {
               enable = true;
+              hostNetwork = true;
               # 9router login password (default is 123456 - see its docs)
               environmentFile = "/persist/secrets/nine-router.env";
               publicEnvironmentFile = "/run/homelab-urls/nine-router.env";

@@ -65,6 +65,11 @@ ssh -N -L 56121:127.0.0.1:56121 <target-user>@<tailscale-hostname>
 HTTP is expected for these loopback-only callback URIs; the SSH connection
 protects the traffic between devices over Tailscale.
 
+The homelab profile runs 9Router with host networking but forces its main
+server and OAuth callbacks to loopback. No 9Router port is opened in the NixOS
+firewall; remote access remains limited to Tailscale Serve and explicit SSH
+tunnels.
+
 | Application | HTTPS port | Backend (loopback only) |
 |---|---:|---:|
 | Glance | 443 | 8080 |
