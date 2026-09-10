@@ -72,14 +72,17 @@
                 links = [
                   {
                     title = "Immich Photos";
+                    icon = "si:immich";
                     backendPort = 2283;
                   }
                   {
                     title = "Vaultwarden";
+                    icon = "si:vaultwarden";
                     backendPort = 8222;
                   }
                   {
                     title = "Obsidian CouchDB";
+                    icon = "si:apachecouchdb";
                     backendPort = 5984;
                     path = "/_utils";
                   }
@@ -90,6 +93,7 @@
                 links = [
                   {
                     title = "n8n Workflows";
+                    icon = "si:n8n";
                     backendPort = 5678;
                   }
                   {

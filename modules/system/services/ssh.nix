@@ -22,13 +22,13 @@
       tailscaleSshUsers = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
-        description = "Tailnet identities permitted by the accompanying Tailscale SSH policy";
+        description = "Tailnet identities documented in the separately applied Tailscale SSH policy; this option does not modify tailnet control-plane policy";
       };
 
       tailscaleSshTargetUser = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
-        description = "Local account that the Tailscale SSH policy may target";
+        description = "Local account documented in the separately applied Tailscale SSH policy";
       };
     };
 

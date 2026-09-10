@@ -18,9 +18,11 @@ SSH is intentionally not open on the LAN or public interfaces. Apply
 [`tailscale-policy.homelab.hujson`](tailscale-policy.homelab.hujson) in the
 Tailscale admin console (or adapt
 [`tailscale-policy.example.hujson`](tailscale-policy.example.hujson) for another
-tailnet), tag the node `tag:homelab`, then connect from a permitted Tailscale
-client with `ssh kryisnn@homelab`. Tailscale SSH verifies the tailnet identity;
-it does not use your normal SSH public key. A policy denial means the tailnet
+tailnet), then connect from another device signed in to the permitted Tailscale
+identity with `ssh kryisnn@homelab`. The ready-to-apply policy uses
+`autogroup:self` because this server is a user-owned node; do not tag it unless
+you also adapt the policy for a tagged server. Tailscale SSH verifies the
+tailnet identity; it does not use your normal SSH public key. A policy denial means the tailnet
 policy needs adjustment, while an ordinary OpenSSH `publickey` error concerns
 the target account's authorized keys.
 
