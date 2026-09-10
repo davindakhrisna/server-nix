@@ -23,6 +23,14 @@ NC='\033[0m' # No Color
 SSH_DIR="$HOME/.ssh"
 KEY_FILE="$SSH_DIR/id_github_deploy"
 REPO_DEFAULT="davindakhrisna/server-nixos"
+# Derive the actual repo from the current checkout's origin, so the script
+# never points the user (or the SSH remote) at a hardcoded repo.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    DETECTED_REPO=$(git remote get-url origin 2>/dev/null | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')
+    if [[ -n "$DETECTED_REPO" ]]; then
+        REPO_DEFAULT="$DETECTED_REPO"
+    fi
+fi
 
 echo -e "${BLUE}${BOLD}====================================================${NC}"
 echo -e "${BLUE}${BOLD}   ❄️  NixOS Server: Post-Installation Setup Helper  ${NC}"
@@ -81,11 +89,12 @@ else
     echo -e "${YELLOW}Double check that the key was saved with write access in GitHub Settings -> Deploy Keys.${NC}"
 fi
 
-# Convert repository remote to SSH if currently HTTPS
+# Convert repository remote to SSH if currently HTTPS (same repo, not a hardcoded one)
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     CURRENT_REMOTE=$(git remote get-url origin 2>/dev/null || true)
-    if [[ "$CURRENT_REMOTE" =~ ^https://github.com/ ]]; then
-        SSH_REMOTE="git@github.com:${REPO_DEFAULT}.git"
+    if [[ "$CURRENT_REMOTE" =~ ^https://github\.com/ ]]; then
+        DETECTED_REPO=$(echo "$CURRENT_REMOTE" | sed -E 's#^https://github\.com/##; s#\.git$##')
+        SSH_REMOTE="git@github.com:${DETECTED_REPO}.git"
         echo ""
         echo -e "${YELLOW}Current git remote is HTTPS:${NC} $CURRENT_REMOTE"
         read -rp "Would you like to switch remote to SSH ($SSH_REMOTE)? [Y/n]: " SWITCH_REMOTE
