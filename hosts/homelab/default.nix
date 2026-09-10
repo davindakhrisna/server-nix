@@ -92,7 +92,7 @@
             photoGallery = {
               enable = true;
               cameraType = "usb";
-              cameraDevice = "/dev/video0";
+              cameraDevice = "/dev/video2";
               environmentFile = "/persist/secrets/photo-gallery.env";
             };
             autoVc = {
