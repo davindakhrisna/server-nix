@@ -16,7 +16,8 @@
       psmisc # provides killall, pstree, fuser
 
       # Language
-      python
+      python3
+      nodejs
     ];
   };
 }
