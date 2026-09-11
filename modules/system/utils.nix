@@ -8,6 +8,7 @@
       nix-index
 
       # Archives & Utilities
+      socat
       unzip
       wget
       curl
