@@ -8,13 +8,15 @@
       nix-index
 
       # Archives & Utilities
-      socat
       unzip
       wget
       curl
       rsync
       tmux
       psmisc # provides killall, pstree, fuser
+
+      # Language
+      python
     ];
   };
 }
